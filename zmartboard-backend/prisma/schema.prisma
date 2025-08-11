@@ -1,0 +1,218 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  MODERATOR
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum ProjectRole {
+  DEVELOPER
+  ADMIN
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  firstName String?
+  lastName  String?
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
+  emailVerified Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  emailVerifications EmailVerification[]
+  projectMemberships ProjectMember[]
+  sentInvitations    ProjectInvitation[] @relation("InvitationSender")
+  receivedInvitations ProjectInvitation[] @relation("InvitationReceiver")
+  assignedTasks      UserTask[]
+  timeEntries        TimeEntry[]
+
+  @@map("users")
+}
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  type      VerificationType
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+  userId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_verifications")
+}
+
+enum VerificationType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  EMAIL_CHANGE
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  members     ProjectMember[]
+  invitations ProjectInvitation[]
+  boards      Board[]
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole @default(DEVELOPER)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@map("project_members")
+}
+
+model ProjectInvitation {
+  id         String           @id @default(cuid())
+  projectId  String
+  senderId   String
+  receiverId String
+  role       ProjectRole      @default(DEVELOPER)
+  status     InvitationStatus @default(PENDING)
+  expiresAt  DateTime
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  project  Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sender   User    @relation("InvitationSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User    @relation("InvitationReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, receiverId])
+  @@map("project_invitations")
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  projectId   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  columns Column[]
+
+  @@map("boards")
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  name      String
+  position  Int
+  boardId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks Task[]
+
+  @@unique([boardId, position])
+  @@map("columns")
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  position    Int
+  columnId    String
+  comments    Comment[]
+  deadline    DateTime?
+  archived    Boolean  @default(false)
+  estimatedHours Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  column Column @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  assignedUsers UserTask[]
+  timeEntries   TimeEntry[]
+
+  @@unique([columnId, position])
+  @@map("tasks")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  taskId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  @@map("comments")
+}
+
+model UserTask {
+  id        String   @id @default(cuid())
+  userId    String
+  taskId    String
+  assignedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, taskId])
+  @@map("user_tasks")
+}
+
+model TimeEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  taskId      String
+  hours       Float
+  description String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@map("time_entries")
+}
+

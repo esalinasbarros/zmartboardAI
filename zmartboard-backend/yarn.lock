@@ -1681,9 +1681,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@prisma/client@npm:6.12.0":
-  version: 6.12.0
-  resolution: "@prisma/client@npm:6.12.0"
+"@prisma/client@npm:^6.12.0":
+  version: 6.16.2
+  resolution: "@prisma/client@npm:6.16.2"
   peerDependencies:
     prisma: "*"
     typescript: ">=5.1.0"
@@ -1692,7 +1692,7 @@ __metadata:
       optional: true
     typescript:
       optional: true
-  checksum: 3d6d9354b57872b58b97c01e3e90d1359d9dc47fd081f0db8ce81af0b3a1f5277678424c5a5a2f6a801ec0c87db3612da1e8be18913ee62ec54e6b4428eb6c96
+  checksum: 57e86bc06fdd32614459701123b129fb513390569054121419e9e1dd65f85ee52f1684c6ac896ca743e1c9b6f0f498808de637ab1d2ef3d1ce59b0edab3fe578
   languageName: node
   linkType: hard
 
@@ -3199,7 +3199,7 @@ __metadata:
     "@nestjs/schematics": ^11.0.0
     "@nestjs/swagger": ^11.2.0
     "@nestjs/testing": ^11.0.1
-    "@prisma/client": 6.12.0
+    "@prisma/client": ^6.12.0
     "@swc/cli": ^0.6.0
     "@swc/core": ^1.10.7
     "@types/bcrypt": ^5.0.2

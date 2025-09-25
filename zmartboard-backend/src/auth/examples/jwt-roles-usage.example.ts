@@ -2,7 +2,7 @@ import { Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { JwtRolesGuard } from '../guards/jwt-roles.guard';
 import { Roles } from '../decorators/roles.decorator';
-import { UserRole } from '../../../generated/prisma';
+import { UserRole } from '@prisma/client';
 
 /**
  * Example controller demonstrating JWT-based authentication with role-based access control

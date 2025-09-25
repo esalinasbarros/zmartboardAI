@@ -15,51 +15,51 @@ export declare class ProjectsService {
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     }>;
     getUserProjects(userId: string): Promise<({
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     })[]>;
     getUserProjectMembership(userId: string, projectId: string): Promise<ProjectMembershipWithProject | null>;
     private verifyProjectRole;
@@ -67,51 +67,51 @@ export declare class ProjectsService {
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     }) | null>;
     updateProject(projectId: string, updateProjectDto: UpdateProjectDto, userId: string): Promise<{
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     }>;
     deleteProject(projectId: string, userId: string): Promise<{
         message: string;
@@ -119,8 +119,8 @@ export declare class ProjectsService {
     sendInvitation(projectId: string, invitationDto: CreateInvitationDto, userId: string): Promise<{
         project: {
             id: string;
-            title: string;
             description: string | null;
+            title: string;
         };
         sender: {
             id: string;
@@ -138,9 +138,9 @@ export declare class ProjectsService {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -150,8 +150,8 @@ export declare class ProjectsService {
     respondToInvitation(invitationId: string, response: InvitationResponseDto, userId: string): Promise<{
         project: {
             id: string;
-            title: string;
             description: string | null;
+            title: string;
         };
         sender: {
             id: string;
@@ -165,9 +165,9 @@ export declare class ProjectsService {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -177,8 +177,8 @@ export declare class ProjectsService {
     getUserInvitations(userId: string): Promise<({
         project: {
             id: string;
-            title: string;
             description: string | null;
+            title: string;
         };
         sender: {
             id: string;
@@ -196,9 +196,9 @@ export declare class ProjectsService {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -222,9 +222,9 @@ export declare class ProjectsService {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -237,17 +237,17 @@ export declare class ProjectsService {
     updateProjectMemberRole(projectId: string, memberId: string, newRole: ProjectRole, userId: string): Promise<{
         user: {
             id: string;
-            role: import(".prisma/client").$Enums.UserRole;
             email: string;
             username: string;
             firstName: string | null;
             lastName: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         userId: string;
         projectId: string;
     }>;
@@ -258,26 +258,26 @@ export declare class ProjectsService {
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     })[]>;
 }
 export {};

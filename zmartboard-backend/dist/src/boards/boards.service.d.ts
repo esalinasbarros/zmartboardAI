@@ -10,10 +10,10 @@ export declare class BoardsService {
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -24,26 +24,26 @@ export declare class BoardsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     }>;
     getProjectBoards(projectId: string, userId: string): Promise<({
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -54,42 +54,42 @@ export declare class BoardsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     })[]>;
     getBoardById(boardId: string, userId: string): Promise<{
         project: {
             members: {
                 id: string;
+                role: import(".prisma/client").$Enums.ProjectRole;
                 createdAt: Date;
                 updatedAt: Date;
-                projectId: string;
                 userId: string;
-                role: import(".prisma/client").$Enums.ProjectRole;
+                projectId: string;
             }[];
         } & {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
         };
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -100,26 +100,26 @@ export declare class BoardsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     }>;
     updateBoard(boardId: string, updateBoardDto: UpdateBoardDto, userId: string): Promise<{
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -130,16 +130,16 @@ export declare class BoardsService {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     }>;
     deleteBoard(boardId: string, userId: string): Promise<{
@@ -148,10 +148,10 @@ export declare class BoardsService {
     createColumn(boardId: string, createColumnDto: CreateColumnDto, userId: string): Promise<{
         tasks: {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             position: number;
             columnId: string;
             deadline: Date | null;
@@ -162,17 +162,17 @@ export declare class BoardsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }>;
     updateColumn(columnId: string, updateColumnDto: UpdateColumnDto, userId: string): Promise<{
         tasks: {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             position: number;
             columnId: string;
             deadline: Date | null;
@@ -183,8 +183,8 @@ export declare class BoardsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }>;
     deleteColumn(columnId: string, userId: string): Promise<{
@@ -194,33 +194,33 @@ export declare class BoardsService {
         board: {
             project: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
             };
         } & {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             projectId: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }) | ({
         tasks: {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             position: number;
             columnId: string;
             deadline: Date | null;
@@ -231,8 +231,8 @@ export declare class BoardsService {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }) | null>;
 }

@@ -15,7 +15,7 @@ async function bootstrap() {
     origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:5174'],
     credentials: true, // Enable credentials for cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Access-Control-Allow-Origin'],
   });
   
   // Global validation pipe

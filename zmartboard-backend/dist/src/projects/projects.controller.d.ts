@@ -8,126 +8,126 @@ export declare class ProjectsController {
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     }>;
     getUserProjects(req: AuthenticatedRequest): Promise<({
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     })[]>;
     getAllProjects(req: AuthenticatedRequest): Promise<({
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     })[]>;
     getProjectById(id: string, req: AuthenticatedRequest): Promise<({
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     }) | null>;
     updateProject(id: string, updateProjectDto: UpdateProjectDto, req: AuthenticatedRequest): Promise<{
         members: ({
             user: {
                 id: string;
-                role: import(".prisma/client").$Enums.UserRole;
                 email: string;
                 username: string;
                 firstName: string | null;
                 lastName: string | null;
+                role: import(".prisma/client").$Enums.UserRole;
             };
         } & {
             id: string;
+            role: import(".prisma/client").$Enums.ProjectRole;
             createdAt: Date;
             updatedAt: Date;
-            role: import(".prisma/client").$Enums.ProjectRole;
             userId: string;
             projectId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
     }>;
     deleteProject(id: string, req: AuthenticatedRequest): Promise<{
         message: string;
@@ -135,8 +135,8 @@ export declare class ProjectsController {
     sendInvitation(id: string, invitationDto: CreateInvitationDto, req: AuthenticatedRequest): Promise<{
         project: {
             id: string;
-            title: string;
             description: string | null;
+            title: string;
         };
         sender: {
             id: string;
@@ -154,9 +154,9 @@ export declare class ProjectsController {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -180,9 +180,9 @@ export declare class ProjectsController {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -192,8 +192,8 @@ export declare class ProjectsController {
     getUserInvitations(req: AuthenticatedRequest): Promise<({
         project: {
             id: string;
-            title: string;
             description: string | null;
+            title: string;
         };
         sender: {
             id: string;
@@ -211,9 +211,9 @@ export declare class ProjectsController {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -223,8 +223,8 @@ export declare class ProjectsController {
     respondToInvitation(invitationId: string, response: InvitationResponseDto, req: AuthenticatedRequest): Promise<{
         project: {
             id: string;
-            title: string;
             description: string | null;
+            title: string;
         };
         sender: {
             id: string;
@@ -238,9 +238,9 @@ export declare class ProjectsController {
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         projectId: string;
         status: import(".prisma/client").$Enums.InvitationStatus;
         expiresAt: Date;
@@ -253,17 +253,17 @@ export declare class ProjectsController {
     updateProjectMemberRole(id: string, memberId: string, updateRoleDto: UpdateProjectMemberRoleDto, req: AuthenticatedRequest): Promise<{
         user: {
             id: string;
-            role: import(".prisma/client").$Enums.UserRole;
             email: string;
             username: string;
             firstName: string | null;
             lastName: string | null;
+            role: import(".prisma/client").$Enums.UserRole;
         };
     } & {
         id: string;
+        role: import(".prisma/client").$Enums.ProjectRole;
         createdAt: Date;
         updatedAt: Date;
-        role: import(".prisma/client").$Enums.ProjectRole;
         userId: string;
         projectId: string;
     }>;

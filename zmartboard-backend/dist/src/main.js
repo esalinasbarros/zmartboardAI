@@ -12,7 +12,7 @@ async function bootstrap() {
         origin: [process.env.FRONTEND_URL || 'http://localhost:5173', 'http://localhost:5174'],
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Access-Control-Allow-Origin'],
     });
     app.useGlobalPipes(new common_1.ValidationPipe({
         whitelist: true,

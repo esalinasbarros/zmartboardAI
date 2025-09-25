@@ -14,7 +14,7 @@ const common_1 = require("@nestjs/common");
 const jwt_auth_guard_1 = require("../guards/jwt-auth.guard");
 const jwt_roles_guard_1 = require("../guards/jwt-roles.guard");
 const roles_decorator_1 = require("../decorators/roles.decorator");
-const prisma_1 = require("../../../generated/prisma");
+const client_1 = require("@prisma/client");
 let ExampleController = class ExampleController {
     getPublicData() {
         return { message: 'This is a public endpoint' };
@@ -51,7 +51,7 @@ __decorate([
 ], ExampleController.prototype, "getProtectedData", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_roles_guard_1.JwtRolesGuard),
-    (0, roles_decorator_1.Roles)(prisma_1.UserRole.USER),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.USER),
     (0, common_1.Get)('user-content'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -59,7 +59,7 @@ __decorate([
 ], ExampleController.prototype, "getUserContent", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_roles_guard_1.JwtRolesGuard),
-    (0, roles_decorator_1.Roles)(prisma_1.UserRole.MODERATOR, prisma_1.UserRole.ADMIN, prisma_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.MODERATOR, client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN),
     (0, common_1.Post)('moderate-content'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -67,7 +67,7 @@ __decorate([
 ], ExampleController.prototype, "moderateContent", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_roles_guard_1.JwtRolesGuard),
-    (0, roles_decorator_1.Roles)(prisma_1.UserRole.ADMIN, prisma_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.ADMIN, client_1.UserRole.SUPER_ADMIN),
     (0, common_1.Get)('admin-panel'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
@@ -75,7 +75,7 @@ __decorate([
 ], ExampleController.prototype, "getAdminPanel", null);
 __decorate([
     (0, common_1.UseGuards)(jwt_roles_guard_1.JwtRolesGuard),
-    (0, roles_decorator_1.Roles)(prisma_1.UserRole.SUPER_ADMIN),
+    (0, roles_decorator_1.Roles)(client_1.UserRole.SUPER_ADMIN),
     (0, common_1.Post)('system-config'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),

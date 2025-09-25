@@ -8,10 +8,10 @@ export declare class BoardsController {
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -22,26 +22,26 @@ export declare class BoardsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     }>;
     getProjectBoards(projectId: string, req: AuthenticatedRequest): Promise<({
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -52,42 +52,42 @@ export declare class BoardsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     })[]>;
     getBoardById(boardId: string, req: AuthenticatedRequest): Promise<{
         project: {
             members: {
                 id: string;
+                role: import(".prisma/client").$Enums.ProjectRole;
                 createdAt: Date;
                 updatedAt: Date;
-                projectId: string;
                 userId: string;
-                role: import(".prisma/client").$Enums.ProjectRole;
+                projectId: string;
             }[];
         } & {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
         };
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -98,26 +98,26 @@ export declare class BoardsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     }>;
     updateBoard(boardId: string, updateBoardDto: UpdateBoardDto, req: AuthenticatedRequest): Promise<{
         columns: ({
             tasks: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
                 position: number;
                 columnId: string;
                 deadline: Date | null;
@@ -128,16 +128,16 @@ export declare class BoardsController {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            position: number;
             name: string;
+            position: number;
             boardId: string;
         })[];
     } & {
         id: string;
-        title: string;
-        description: string | null;
         createdAt: Date;
         updatedAt: Date;
+        description: string | null;
+        title: string;
         projectId: string;
     }>;
     deleteBoard(boardId: string, req: AuthenticatedRequest): Promise<{
@@ -146,10 +146,10 @@ export declare class BoardsController {
     createColumn(boardId: string, createColumnDto: CreateColumnDto, req: AuthenticatedRequest): Promise<{
         tasks: {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             position: number;
             columnId: string;
             deadline: Date | null;
@@ -160,17 +160,17 @@ export declare class BoardsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }>;
     updateColumn(columnId: string, updateColumnDto: UpdateColumnDto, req: AuthenticatedRequest): Promise<{
         tasks: {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             position: number;
             columnId: string;
             deadline: Date | null;
@@ -181,8 +181,8 @@ export declare class BoardsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }>;
     deleteColumn(columnId: string, req: AuthenticatedRequest): Promise<{
@@ -192,33 +192,33 @@ export declare class BoardsController {
         board: {
             project: {
                 id: string;
-                title: string;
-                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
+                description: string | null;
+                title: string;
             };
         } & {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             projectId: string;
         };
     } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }) | ({
         tasks: {
             id: string;
-            title: string;
-            description: string | null;
             createdAt: Date;
             updatedAt: Date;
+            description: string | null;
+            title: string;
             position: number;
             columnId: string;
             deadline: Date | null;
@@ -229,8 +229,8 @@ export declare class BoardsController {
         id: string;
         createdAt: Date;
         updatedAt: Date;
-        position: number;
         name: string;
+        position: number;
         boardId: string;
     }) | null>;
 }

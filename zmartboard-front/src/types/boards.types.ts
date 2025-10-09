@@ -25,6 +25,9 @@ export interface Task {
   description?: string;
   position: number;
   columnId: string;
+  deadline?: string | Date;
+  archived: boolean;
+  estimatedHours?: number;
   createdAt: string | Date;
   updatedAt: string | Date;
 }
@@ -53,6 +56,25 @@ export interface MoveColumnDto {
   position: number;
 }
 
+// Task DTOs
+export interface CreateTaskDto {
+  title: string;
+  description?: string;
+  position?: number;
+}
+
+export interface UpdateTaskDto {
+  title?: string;
+  description?: string;
+  deadline?: string | Date;
+  estimatedHours?: number;
+}
+
+export interface MoveTaskDto {
+  columnId: string;
+  position: number;
+}
+
 // API Response types
 export interface CreateBoardResponse {
   board: Board;
@@ -64,4 +86,12 @@ export interface CreateColumnResponse {
 
 export interface DeleteResponse {
   message: string;
+}
+
+export interface CreateTaskResponse {
+  task: Task;
+}
+
+export interface UpdateTaskResponse {
+  task: Task;
 }

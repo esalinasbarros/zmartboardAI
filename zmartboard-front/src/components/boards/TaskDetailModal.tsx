@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import type { Task } from '../../types/boards.types';
 import { useUpdateTask } from '../../store/boards/boardsHooks';
+import SetDeadlineModal from './SetDeadlineModal';
+import SetEstimatedHoursModal from './SetEstimatedHoursModal';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -17,6 +19,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
+  const [showDeadlineModal, setShowDeadlineModal] = useState(false);
+  const [showEstimatedHoursModal, setShowEstimatedHoursModal] = useState(false);
   const { updateTask, isLoading: isUpdatingTask } = useUpdateTask();
   if (!isOpen || !task) return null;
 
@@ -82,6 +86,38 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     setIsEditingDescription(false);
     setEditTitle('');
     setEditDescription('');
+  };
+
+  const handleSetDeadline = async (taskId: string, deadline: string | null) => {
+    console.log('TaskDetailModal: handleSetDeadline called', { taskId, deadline });
+    try {
+      console.log('TaskDetailModal: Calling updateTask with', { taskId, deadline: deadline || undefined });
+      await updateTask(taskId, { deadline: deadline || undefined });
+      console.log('TaskDetailModal: updateTask completed successfully');
+      setShowDeadlineModal(false);
+    } catch (error) {
+      console.error('TaskDetailModal: Error setting deadline:', error);
+    }
+  };
+
+  const handleCloseDeadlineModal = () => {
+    setShowDeadlineModal(false);
+  };
+
+  const handleSetEstimatedHours = async (taskId: string, estimatedHours: number | null) => {
+    console.log('TaskDetailModal: handleSetEstimatedHours called', { taskId, estimatedHours });
+    try {
+      console.log('TaskDetailModal: Calling updateTask with', { taskId, estimatedHours: estimatedHours || undefined });
+      await updateTask(taskId, { estimatedHours: estimatedHours || undefined });
+      console.log('TaskDetailModal: updateTask completed successfully');
+      setShowEstimatedHoursModal(false);
+    } catch (error) {
+      console.error('TaskDetailModal: Error setting estimated hours:', error);
+    }
+  };
+
+  const handleCloseEstimatedHoursModal = () => {
+    setShowEstimatedHoursModal(false);
   };
 
   return (
@@ -425,19 +461,25 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <span>Asignar usuarios</span>
             </button>
 
-            <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2 shadow-sm">
+            <button 
+              onClick={() => setShowDeadlineModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center space-x-2 shadow-sm"
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               <span>Establecer fecha límite</span>
             </button>
 
-            <button className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2 shadow-sm">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Establecer horas</span>
-            </button>
+                    <button
+                      onClick={() => setShowEstimatedHoursModal(true)}
+                      className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center space-x-2 shadow-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Establecer horas</span>
+                    </button>
 
             <button className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200 flex items-center space-x-2 shadow-sm">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -450,6 +492,23 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         </div>
       </div>
 
+      {/* Set Deadline Modal */}
+      <SetDeadlineModal
+        isOpen={showDeadlineModal}
+        onClose={handleCloseDeadlineModal}
+        onSubmit={handleSetDeadline}
+        task={task}
+        isLoading={isUpdatingTask}
+      />
+
+      {/* Set Estimated Hours Modal */}
+      <SetEstimatedHoursModal
+        isOpen={showEstimatedHoursModal}
+        onClose={handleCloseEstimatedHoursModal}
+        onSubmit={handleSetEstimatedHours}
+        task={task}
+        isLoading={isUpdatingTask}
+      />
     </div>
   );
 };

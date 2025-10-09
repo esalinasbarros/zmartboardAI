@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import type { Column, UpdateColumnDto, CreateTaskDto } from '../../types/boards.types';
+import type { Column, UpdateColumnDto, CreateTaskDto, Task } from '../../types/boards.types';
 import { useCreateTask } from '../../store/boards/boardsHooks';
 import CreateTaskModal from './CreateTaskModal';
+import TaskDetailModal from './TaskDetailModal';
 
 interface ColumnCardProps {
   column: Column;
@@ -28,6 +29,8 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
   const [editName, setEditName] = useState(column.name);
   const [isDragOver, setIsDragOver] = useState(false);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
+  const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   
   const { createTask, isLoading: isCreatingTask } = useCreateTask();
 
@@ -98,6 +101,16 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
     } catch (error) {
       console.error('Error creating task:', error);
     }
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setShowTaskDetailModal(true);
+  };
+
+  const handleCloseTaskDetail = () => {
+    setShowTaskDetailModal(false);
+    setSelectedTask(null);
   };
 
   return (
@@ -194,6 +207,7 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
           column.tasks.map((task) => (
             <div
               key={task.id}
+              onClick={() => handleTaskClick(task)}
               className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-orange-200 hover:bg-gradient-to-r hover:from-white hover:to-orange-50"
             >
               <h4 className="font-medium text-gray-900 text-sm mb-1">
@@ -204,6 +218,37 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
                   {task.description}
                 </p>
               )}
+              {/* Task metadata */}
+              <div className="flex items-center justify-between mt-2 text-xs text-gray-500">
+                <div className="flex items-center space-x-2">
+                  {task.deadline && (
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span className={new Date(task.deadline) < new Date() ? 'text-red-500' : ''}>
+                        {new Date(task.deadline).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                  )}
+                  {task.estimatedHours && (
+                    <div className="flex items-center space-x-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>{task.estimatedHours}h</span>
+                    </div>
+                  )}
+                </div>
+                {task.assignedUsers && task.assignedUsers.length > 0 && (
+                  <div className="flex items-center space-x-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                    <span>{task.assignedUsers.length}</span>
+                  </div>
+                )}
+              </div>
             </div>
           ))
         ) : (
@@ -239,6 +284,13 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
         onSubmit={handleCreateTask}
         isLoading={isCreatingTask}
         existingTasksCount={column.tasks?.length || 0}
+      />
+
+      {/* Task Detail Modal */}
+      <TaskDetailModal
+        isOpen={showTaskDetailModal}
+        onClose={handleCloseTaskDetail}
+        task={selectedTask}
       />
     </div>
   );

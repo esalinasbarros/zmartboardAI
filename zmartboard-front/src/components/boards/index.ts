@@ -6,3 +6,4 @@ export { default as CreateBoardModal } from './CreateBoardModal';
 export { default as EditBoardModal } from './EditBoardModal';
 export { default as CreateColumnModal } from './CreateColumnModal';
 export { default as CreateTaskModal } from './CreateTaskModal';
+export { default as TaskDetailModal } from './TaskDetailModal';

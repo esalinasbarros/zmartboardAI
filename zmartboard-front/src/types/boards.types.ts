@@ -19,6 +19,50 @@ export interface Column {
   tasks: Task[];
 }
 
+export interface User {
+  id: string;
+  email: string;
+  username: string;
+  firstName?: string;
+  lastName?: string;
+  role: string;
+  isActive: boolean;
+  emailVerified: boolean;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
+export interface UserTask {
+  id: string;
+  userId: string;
+  taskId: string;
+  assignedAt: string | Date;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  user?: User;
+}
+
+export interface TimeEntry {
+  id: string;
+  userId: string;
+  taskId: string;
+  hours: number;
+  description?: string;
+  date: string | Date;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  user?: User;
+}
+
+export interface Comment {
+  id: string;
+  content: string;
+  userId: string;
+  taskId: string;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -30,6 +74,9 @@ export interface Task {
   estimatedHours?: number;
   createdAt: string | Date;
   updatedAt: string | Date;
+  assignedUsers?: UserTask[];
+  timeEntries?: TimeEntry[];
+  comments?: Comment[];
 }
 
 // DTOs for API calls

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { Task } from '../../types/boards.types';
+import { useUpdateTask } from '../../store/boards/boardsHooks';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -12,6 +13,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onClose,
   task,
 }) => {
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const { updateTask, isLoading: isUpdatingTask } = useUpdateTask();
   if (!isOpen || !task) return null;
 
   const formatDate = (date: string | Date) => {
@@ -34,16 +40,109 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const isOverdue = task.deadline && new Date(task.deadline) < new Date();
 
+  const handleStartEditTitle = () => {
+    setEditTitle(task.title);
+    setIsEditingTitle(true);
+  };
+
+  const handleStartEditDescription = () => {
+    setEditDescription(task.description || '');
+    setIsEditingDescription(true);
+  };
+
+  const handleSaveTitle = async () => {
+    if (editTitle.trim() && editTitle.trim() !== task.title) {
+      try {
+        await updateTask(task.id, { title: editTitle.trim() });
+        setIsEditingTitle(false);
+      } catch (error) {
+        console.error('Error updating task title:', error);
+      }
+    } else {
+      setIsEditingTitle(false);
+    }
+  };
+
+  const handleSaveDescription = async () => {
+    const newDescription = editDescription.trim() || undefined;
+    if (newDescription !== task.description) {
+      try {
+        await updateTask(task.id, { description: newDescription });
+        setIsEditingDescription(false);
+      } catch (error) {
+        console.error('Error updating task description:', error);
+      }
+    } else {
+      setIsEditingDescription(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingTitle(false);
+    setIsEditingDescription(false);
+    setEditTitle('');
+    setEditDescription('');
+  };
+
   return (
     <div className="fixed inset-0 bg-white/30 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden border border-gray-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-white to-gray-50">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 flex-1">
             <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-            <h2 className="text-xl font-semibold text-gray-900 truncate">
-              {task.title}
-            </h2>
+            {isEditingTitle ? (
+              <div className="flex items-center space-x-2 flex-1">
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="text-xl font-semibold text-gray-900 bg-transparent border-b-2 border-orange-500 focus:outline-none focus:border-orange-600 flex-1"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSaveTitle();
+                    } else if (e.key === 'Escape') {
+                      handleCancelEdit();
+                    }
+                  }}
+                />
+                <button
+                  onClick={handleSaveTitle}
+                  className="p-1 text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors duration-200"
+                  title="Guardar"
+                  disabled={isUpdatingTask}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="p-1 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition-colors duration-200"
+                  title="Cancelar"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 flex-1">
+                <h2 className="text-xl font-semibold text-gray-900 truncate flex-1">
+                  {task.title}
+                </h2>
+                <button
+                  onClick={handleStartEditTitle}
+                  className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors duration-200"
+                  title="Editar título"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
+              </div>
+            )}
             {task.archived && (
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                 Archivada
@@ -52,7 +151,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors duration-200"
+            className="text-gray-400 hover:text-gray-600 transition-colors duration-200 ml-4"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -66,17 +165,76 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <div className="flex-1 p-6 overflow-y-auto">
             {/* Description */}
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Descripción
-              </h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  Descripción
+                </h3>
+                {!isEditingDescription && (
+                  <button
+                    onClick={handleStartEditDescription}
+                    className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors duration-200"
+                    title="Editar descripción"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               <div className="bg-gradient-to-br from-gray-50 to-white rounded-lg p-4 border border-gray-100 min-h-[100px]">
-                {task.description ? (
-                  <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{task.description}</p>
+                {isEditingDescription ? (
+                  <div className="space-y-3">
+                    <textarea
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                      className="w-full p-3 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors duration-200 resize-none"
+                      rows={4}
+                      placeholder="Describe los detalles de la tarea..."
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') {
+                          handleCancelEdit();
+                        }
+                      }}
+                    />
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-500">
+                        {editDescription.length}/1000 caracteres
+                      </p>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={handleSaveDescription}
+                          className="px-3 py-1 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded transition-colors duration-200 flex items-center space-x-1"
+                          disabled={isUpdatingTask}
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span>Guardar</span>
+                        </button>
+                        <button
+                          onClick={handleCancelEdit}
+                          className="px-3 py-1 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded transition-colors duration-200 flex items-center space-x-1"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                          <span>Cancelar</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  <p className="text-gray-500 italic">Sin descripción</p>
+                  <div>
+                    {task.description ? (
+                      <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{task.description}</p>
+                    ) : (
+                      <p className="text-gray-500 italic">Sin descripción</p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -257,7 +415,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         </div>
 
         {/* Footer with Action Buttons */}
-        <div className="border-t border-gray-200 p-6 bg-gradient-to-r from-gray-50 to-white">
+        <div className="border-t border-gray-200 p-6 pb-8 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex flex-wrap gap-3">
             {/* Placeholder buttons for future functionality */}
             <button className="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors duration-200 flex items-center space-x-2 shadow-sm">
@@ -288,15 +446,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <span>Agregar comentario</span>
             </button>
 
-            <button className="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors duration-200 flex items-center space-x-2 shadow-sm">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span>Editar tarea</span>
-            </button>
           </div>
         </div>
       </div>
+
     </div>
   );
 };

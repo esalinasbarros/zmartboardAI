@@ -30,7 +30,7 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
   const [isDragOver, setIsDragOver] = useState(false);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [showTaskDetailModal, setShowTaskDetailModal] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   
   const { createTask, isLoading: isCreatingTask } = useCreateTask();
 
@@ -104,14 +104,17 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
   };
 
   const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
+    setSelectedTaskId(task.id);
     setShowTaskDetailModal(true);
   };
 
   const handleCloseTaskDetail = () => {
     setShowTaskDetailModal(false);
-    setSelectedTask(null);
+    setSelectedTaskId(null);
   };
+
+  // Get the current task data from Redux state
+  const selectedTask = selectedTaskId ? column.tasks?.find(task => task.id === selectedTaskId) || null : null;
 
   return (
     <div 

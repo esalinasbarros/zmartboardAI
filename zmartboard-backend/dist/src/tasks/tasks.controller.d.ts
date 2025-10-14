@@ -5,65 +5,48 @@ export declare class TasksController {
     private readonly tasksService;
     constructor(tasksService: TasksService);
     getTaskById(taskId: string, req: AuthenticatedRequest): Promise<{
-        timeEntries: ({
-            user: {
-                id: string;
-                username: string;
-                firstName: string | null;
-                lastName: string | null;
-            };
-        } & {
+        comments: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            hours: number;
-            date: Date;
+            content: string;
             taskId: string;
-        })[];
+        }[];
         column: {
             board: {
                 project: {
                     members: {
                         id: string;
-                        role: import(".prisma/client").$Enums.ProjectRole;
                         createdAt: Date;
                         updatedAt: Date;
                         userId: string;
+                        role: import(".prisma/client").$Enums.ProjectRole;
                         projectId: string;
                     }[];
                 } & {
                     id: string;
+                    title: string;
+                    description: string | null;
                     createdAt: Date;
                     updatedAt: Date;
-                    description: string | null;
-                    title: string;
                 };
             } & {
                 id: string;
+                title: string;
+                description: string | null;
                 createdAt: Date;
                 updatedAt: Date;
-                description: string | null;
-                title: string;
                 projectId: string;
             };
         } & {
             id: string;
+            position: number;
             createdAt: Date;
             updatedAt: Date;
             name: string;
-            position: number;
             boardId: string;
         };
-        comments: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            content: string;
-            userId: string;
-            taskId: string;
-        }[];
         assignedUsers: ({
             user: {
                 id: string;
@@ -79,85 +62,102 @@ export declare class TasksController {
             taskId: string;
             assignedAt: Date;
         })[];
+        timeEntries: ({
+            user: {
+                id: string;
+                username: string;
+                firstName: string | null;
+                lastName: string | null;
+            };
+        } & {
+            id: string;
+            description: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            userId: string;
+            date: Date;
+            taskId: string;
+            hours: number;
+        })[];
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         title: string;
+        description: string | null;
         position: number;
         columnId: string;
         deadline: Date | null;
         archived: boolean;
         estimatedHours: number | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     createTask(columnId: string, createTaskDto: CreateTaskDto, req: AuthenticatedRequest): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         title: string;
+        description: string | null;
         position: number;
         columnId: string;
         deadline: Date | null;
         archived: boolean;
         estimatedHours: number | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     updateTask(taskId: string, updateTaskDto: UpdateTaskDto, req: AuthenticatedRequest): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         title: string;
+        description: string | null;
         position: number;
         columnId: string;
         deadline: Date | null;
         archived: boolean;
         estimatedHours: number | null;
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     deleteTask(taskId: string, req: AuthenticatedRequest): Promise<{
         message: string;
     }>;
     moveTask(taskId: string, moveTaskDto: MoveTaskDto, req: AuthenticatedRequest): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        description: string | null;
         title: string;
+        description: string | null;
         position: number;
         columnId: string;
         deadline: Date | null;
         archived: boolean;
         estimatedHours: number | null;
+        createdAt: Date;
+        updatedAt: Date;
     } | null>;
     archiveTask(taskId: string, req: AuthenticatedRequest): Promise<{
         message: string;
         task: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
             title: string;
+            description: string | null;
             position: number;
             columnId: string;
             deadline: Date | null;
             archived: boolean;
             estimatedHours: number | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     unarchiveTask(taskId: string, req: AuthenticatedRequest): Promise<{
         message: string;
         task: {
             id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            description: string | null;
             title: string;
+            description: string | null;
             position: number;
             columnId: string;
             deadline: Date | null;
             archived: boolean;
             estimatedHours: number | null;
+            createdAt: Date;
+            updatedAt: Date;
         };
     }>;
     assignUserToTask(taskId: string, assignUserDto: AssignUserDto, req: AuthenticatedRequest): Promise<{
@@ -208,13 +208,13 @@ export declare class TasksController {
             };
         } & {
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            hours: number;
             date: Date;
             taskId: string;
+            hours: number;
         };
     }>;
     updateTimeEntry(timeEntryId: string, updateTimeEntryDto: UpdateTimeEntryDto, req: AuthenticatedRequest): Promise<{
@@ -228,13 +228,13 @@ export declare class TasksController {
             };
         } & {
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            hours: number;
             date: Date;
             taskId: string;
+            hours: number;
         };
     }>;
     deleteTimeEntry(timeEntryId: string, req: AuthenticatedRequest): Promise<{
@@ -250,13 +250,13 @@ export declare class TasksController {
             };
         } & {
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            hours: number;
             date: Date;
             taskId: string;
+            hours: number;
         })[];
         totalHours: number;
         entryCount: number;
@@ -264,13 +264,13 @@ export declare class TasksController {
     getUserTaskTimeEntries(taskId: string, req: AuthenticatedRequest): Promise<{
         timeEntries: {
             id: string;
+            description: string | null;
             createdAt: Date;
             updatedAt: Date;
-            description: string | null;
             userId: string;
-            hours: number;
             date: Date;
             taskId: string;
+            hours: number;
         }[];
         totalHours: number;
         entryCount: number;

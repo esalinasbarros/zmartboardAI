@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useBoardActions, useBoardsState, useCurrentBoard } from '../../store/boards/boardsHooks';
-import type { Board, CreateColumnDto, UpdateColumnDto, MoveColumnDto } from '../../types/boards.types';
+import React, { useState } from 'react';
+import { useBoardActions, useBoardsState, useCurrentBoard, useTaskActions } from '../../store/boards/boardsHooks';
+import type { Board, CreateColumnDto, UpdateColumnDto, MoveColumnDto, MoveTaskDto } from '../../types/boards.types';
 import ColumnCard from './ColumnCard';
 import CreateColumnModal from './CreateColumnModal';
 
 interface BoardViewProps {
   board: Board;
   isAdmin?: boolean;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = false, onBack }) => {
@@ -15,6 +15,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
   const { isLoading } = useBoardsState();
   const currentBoard = useCurrentBoard();
   const { updateColumn, deleteColumn, createColumn, moveColumn } = useBoardActions();
+  const { moveTask } = useTaskActions();
 
   // Use currentBoard from Redux if available, fallback to prop
   const board = currentBoard || initialBoard;
@@ -70,19 +71,28 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
     }
   };
 
-  const handleDropColumn = async (draggedColumnId: string, targetColumnId: string) => {
-    const draggedColumn = sortedColumns.find(col => col.id === draggedColumnId);
-    const targetColumn = sortedColumns.find(col => col.id === targetColumnId);
-    
-    if (!draggedColumn || !targetColumn || draggedColumnId === targetColumnId) {
+  const handleDropTask = async (taskId: string, targetColumnId: string, sourceColumnId: string) => {
+    if (!taskId || !targetColumnId) {
+      return;
+    }
+
+    // If dropping in the same column, do nothing
+    if (sourceColumnId === targetColumnId) {
       return;
     }
 
     try {
-      const moveData: MoveColumnDto = { position: targetColumn.position };
-      await moveColumn(draggedColumnId, moveData);
+      // Get the target column's task count to place at the end
+      const targetColumn = sortedColumns.find(col => col.id === targetColumnId);
+      const newPosition = targetColumn?.tasks?.length || 0;
+
+      const moveData: MoveTaskDto = { 
+        columnId: targetColumnId,
+        position: newPosition
+      };
+      await moveTask(taskId, moveData);
     } catch (error) {
-      console.error('Error moving column:', error);
+      console.error('Error moving task:', error);
     }
   };
 
@@ -91,15 +101,17 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
       {/* Board Header */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-200">
         <div className="flex items-center space-x-4">
-          <button
-            onClick={onBack}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Volver a tableros"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          {onBack && (
+            <button
+              onClick={onBack}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Volver a tableros"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
           <div>
             <h1 className="text-2xl font-bold text-gray-900">{board.title}</h1>
             {board.description && (
@@ -133,7 +145,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
                   onUpdate={isAdmin ? handleUpdateColumn : undefined}
                   onDelete={isAdmin ? handleDeleteColumn : undefined}
                   onMove={isAdmin ? handleMoveColumn : undefined}
-                  onDrop={isAdmin ? handleDropColumn : undefined}
+                  onDrop={isAdmin ? handleDropTask : undefined}
                   isAdmin={isAdmin}
                   canMoveLeft={index > 0}
                   canMoveRight={index < sortedColumns.length - 1}

@@ -9,7 +9,7 @@ interface ColumnCardProps {
   onUpdate?: (columnId: string, data: UpdateColumnDto) => void;
   onDelete?: (columnId: string) => void;
   onMove?: (columnId: string, direction: 'left' | 'right') => void;
-  onDrop?: (draggedColumnId: string, targetColumnId: string) => void;
+  onDrop?: (taskId: string, targetColumnId: string, sourceColumnId: string) => void;
   isAdmin?: boolean;
   canMoveLeft?: boolean;
   canMoveRight?: boolean;
@@ -61,21 +61,23 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
     }
   };
 
-  // Drag and Drop handlers
-  const handleDragStart = (e: React.DragEvent) => {
+  // Task Drag and Drop handlers
+  const handleTaskDragStart = (e: React.DragEvent, taskId: string) => {
     if (!isAdmin) return;
-    e.dataTransfer.setData('text/plain', column.id);
+    e.stopPropagation(); // Prevent column drag
+    e.dataTransfer.setData('application/json', JSON.stringify({ taskId, sourceColumnId: column.id }));
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleColumnDragOver = (e: React.DragEvent) => {
     if (!isAdmin) return;
     e.preventDefault();
+    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     setIsDragOver(true);
   };
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleColumnDragLeave = (e: React.DragEvent) => {
     if (!isAdmin) return;
     // Only set isDragOver to false if we're leaving the column card itself
     if (!e.currentTarget.contains(e.relatedTarget as Node)) {
@@ -83,14 +85,20 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleColumnDrop = (e: React.DragEvent) => {
     if (!isAdmin) return;
     e.preventDefault();
+    e.stopPropagation();
     setIsDragOver(false);
     
-    const draggedColumnId = e.dataTransfer.getData('text/plain');
-    if (draggedColumnId && draggedColumnId !== column.id) {
-      onDrop?.(draggedColumnId, column.id);
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('application/json'));
+      if (data.taskId) {
+        // Drop task into this column (at the end)
+        onDrop?.(data.taskId, column.id, data.sourceColumnId);
+      }
+    } catch (error) {
+      console.error('Error handling drop:', error);
     }
   };
 
@@ -122,14 +130,10 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
         isDragOver 
           ? 'border-orange-400 shadow-xl ring-2 ring-orange-200 bg-gradient-to-br from-orange-50 to-white' 
           : 'border-gray-200 hover:shadow-xl'
-      } ${
-        isAdmin ? 'cursor-move' : ''
       }`}
-      draggable={isAdmin && !isEditing}
-      onDragStart={handleDragStart}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      onDragOver={handleColumnDragOver}
+      onDragLeave={handleColumnDragLeave}
+      onDrop={handleColumnDrop}
     >
       {/* Column Header */}
       <div className="flex items-center justify-between mb-4">
@@ -211,7 +215,9 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
             <div
               key={task.id}
               onClick={() => handleTaskClick(task)}
-              className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer hover:border-orange-200 hover:bg-gradient-to-r hover:from-white hover:to-orange-50"
+              className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 cursor-move hover:border-orange-200 hover:bg-gradient-to-r hover:from-white hover:to-orange-50"
+              draggable={isAdmin}
+              onDragStart={(e) => handleTaskDragStart(e, task.id)}
             >
               <h4 className="font-medium text-gray-900 text-sm mb-1">
                 {task.title}

@@ -218,6 +218,13 @@ let TasksService = class TasksService {
         const finalTargetColumnId = targetColumnId || sourceColumnId;
         await this.prisma.$transaction(async (tx) => {
             if (targetColumnId && targetColumnId !== sourceColumnId) {
+                await tx.task.update({
+                    where: { id: taskId },
+                    data: {
+                        columnId: finalTargetColumnId,
+                        position: -1,
+                    },
+                });
                 await tx.task.updateMany({
                     where: {
                         columnId: sourceColumnId,
@@ -239,12 +246,15 @@ let TasksService = class TasksService {
                 await tx.task.update({
                     where: { id: taskId },
                     data: {
-                        columnId: finalTargetColumnId,
                         position: newPosition,
                     },
                 });
             }
             else {
+                await tx.task.update({
+                    where: { id: taskId },
+                    data: { position: -1 },
+                });
                 if (newPosition > oldPosition) {
                     await tx.task.updateMany({
                         where: {

@@ -357,6 +357,12 @@ export class BoardsService {
     }
 
     await this.prisma.$transaction(async (tx) => {
+      // Step 1: Move the column to a temporary negative position to avoid conflicts
+      await tx.column.update({
+        where: { id: columnId },
+        data: { position: -1 },
+      });
+
       if (newPosition > oldPosition) {
         // Moving right: shift columns left
         await tx.column.updateMany({
@@ -387,6 +393,7 @@ export class BoardsService {
         });
       }
 
+      // Step 3: Move the column to its final position
       await tx.column.update({
         where: { id: columnId },
         data: { position: newPosition },

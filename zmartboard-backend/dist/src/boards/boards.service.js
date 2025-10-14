@@ -273,6 +273,10 @@ let BoardsService = BoardsService_1 = class BoardsService {
             return column;
         }
         await this.prisma.$transaction(async (tx) => {
+            await tx.column.update({
+                where: { id: columnId },
+                data: { position: -1 },
+            });
             if (newPosition > oldPosition) {
                 await tx.column.updateMany({
                     where: {

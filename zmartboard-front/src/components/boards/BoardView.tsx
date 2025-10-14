@@ -53,6 +53,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
     if (!currentColumn) return;
 
     const currentIndex = sortedColumns.findIndex(col => col.id === columnId);
+    const oldPosition = currentColumn.position;
     let newPosition: number;
 
     if (direction === 'left' && currentIndex > 0) {
@@ -65,7 +66,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
 
     try {
       const moveData: MoveColumnDto = { position: newPosition };
-      await moveColumn(columnId, moveData, board.id);
+      await moveColumn(columnId, moveData, oldPosition);
     } catch (error) {
       console.error('Error moving column:', error);
     }
@@ -90,7 +91,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
         targetColumnId: targetColumnId,
         position: newPosition
       };
-      await moveTask(taskId, moveData, board.id);
+      await moveTask(taskId, moveData);
     } catch (error) {
       console.error('Error moving task:', error);
     }

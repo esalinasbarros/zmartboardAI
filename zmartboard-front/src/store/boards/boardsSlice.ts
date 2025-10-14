@@ -4,6 +4,7 @@ import { boardsApi } from '../../services/boards.api';
 import { tasksApi } from '../../services/tasks.api';
 import type {
   Board,
+  Column,
   CreateBoardDto,
   UpdateBoardDto,
   CreateColumnDto,
@@ -137,12 +138,10 @@ export const deleteColumn = createAsyncThunk(
 
 export const moveColumn = createAsyncThunk(
   'boards/moveColumn',
-  async ({ columnId, moveData, boardId }: { columnId: string; moveData: MoveColumnDto; boardId: string }, { rejectWithValue }) => {
+  async ({ columnId, moveData, oldPosition }: { columnId: string; moveData: MoveColumnDto; oldPosition: number }, { rejectWithValue }) => {
     try {
-      await boardsApi.moveColumn(columnId, moveData);
-      // Refetch the board to get all updated positions
-      const updatedBoard = await boardsApi.getBoardById(boardId);
-      return updatedBoard;
+      const response = await boardsApi.moveColumn(columnId, moveData);
+      return { column: response, newPosition: moveData.position, oldPosition };
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to move column';
       return rejectWithValue(errorMessage);
@@ -192,12 +191,10 @@ export const deleteTask = createAsyncThunk(
 
 export const moveTask = createAsyncThunk(
   'boards/moveTask',
-  async ({ taskId, moveData, boardId }: { taskId: string; moveData: MoveTaskDto; boardId: string }, { rejectWithValue }) => {
+  async ({ taskId, moveData }: { taskId: string; moveData: MoveTaskDto }, { rejectWithValue }) => {
     try {
-      await tasksApi.moveTask(taskId, moveData);
-      // Refetch the board to get all updated positions
-      const updatedBoard = await boardsApi.getBoardById(boardId);
-      return updatedBoard;
+      const response = await tasksApi.moveTask(taskId, moveData);
+      return response;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to move task';
       return rejectWithValue(errorMessage);
@@ -413,28 +410,56 @@ const boardsSlice = createSlice({
 
     // Move column
       .addCase(moveColumn.pending, (state) => {
-        state.isLoading = true;
+        // Don't set isLoading for move operations to avoid affecting other UI elements
         state.error = null;
       })
       .addCase(moveColumn.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const updatedBoard = action.payload;
+        const { column: updatedColumn, newPosition, oldPosition } = action.payload;
         
-        // Update current board with all new positions
-        if (state.currentBoard?.id === updatedBoard.id) {
-          state.currentBoard = updatedBoard;
+        // Helper function to update column positions
+        const updateColumnPositions = (columns: Column[]) => {
+          // First, adjust positions of other columns that were affected by the move
+          if (newPosition > oldPosition) {
+            // Moving right: columns between old and new position shift left
+            columns.forEach(col => {
+              if (col.id !== updatedColumn.id && col.position > oldPosition && col.position <= newPosition) {
+                col.position = col.position - 1;
+              }
+            });
+          } else if (newPosition < oldPosition) {
+            // Moving left: columns between new and old position shift right
+            columns.forEach(col => {
+              if (col.id !== updatedColumn.id && col.position >= newPosition && col.position < oldPosition) {
+                col.position = col.position + 1;
+              }
+            });
+          }
+          
+          // Update the moved column
+          const columnIndex = columns.findIndex(c => c.id === updatedColumn.id);
+          if (columnIndex !== -1) {
+            columns[columnIndex] = updatedColumn;
+          }
+          
+          // Sort by position
+          columns.sort((a, b) => a.position - b.position);
+        };
+        
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          updateColumnPositions(state.currentBoard.columns);
         }
         
         // Update in boards list
         if (state.boards) {
-          const boardIndex = state.boards.findIndex(b => b.id === updatedBoard.id);
-          if (boardIndex !== -1) {
-            state.boards[boardIndex] = updatedBoard;
-          }
+          state.boards.forEach(board => {
+            if (board.columns && board.columns.some(c => c.id === updatedColumn.id)) {
+              updateColumnPositions(board.columns);
+            }
+          });
         }
       })
       .addCase(moveColumn.rejected, (state, action) => {
-        state.isLoading = false;
         state.error = action.payload as string;
       })
 
@@ -561,28 +586,59 @@ const boardsSlice = createSlice({
 
     // Move task
       .addCase(moveTask.pending, (state) => {
-        state.isLoading = true;
+        // Don't set isLoading for move operations to avoid affecting other UI elements
         state.error = null;
       })
       .addCase(moveTask.fulfilled, (state, action) => {
-        state.isLoading = false;
-        const updatedBoard = action.payload;
+        const updatedTask = action.payload;
         
-        // Update current board with all new positions
-        if (state.currentBoard?.id === updatedBoard.id) {
-          state.currentBoard = updatedBoard;
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          // Remove task from all columns (in case it moved)
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              column.tasks = column.tasks.filter(t => t.id !== updatedTask.id);
+            }
+          });
+          
+          // Add task to correct column
+          const targetColumn = state.currentBoard.columns.find(c => c.id === updatedTask.columnId);
+          if (targetColumn) {
+            if (!targetColumn.tasks) {
+              targetColumn.tasks = [];
+            }
+            targetColumn.tasks.push(updatedTask);
+            // Re-sort tasks by position
+            targetColumn.tasks.sort((a, b) => a.position - b.position);
+          }
         }
         
         // Update in boards list
         if (state.boards) {
-          const boardIndex = state.boards.findIndex(b => b.id === updatedBoard.id);
-          if (boardIndex !== -1) {
-            state.boards[boardIndex] = updatedBoard;
-          }
+          state.boards.forEach(board => {
+            if (board.columns) {
+              // Remove task from all columns
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  column.tasks = column.tasks.filter(t => t.id !== updatedTask.id);
+                }
+              });
+              
+              // Add task to correct column
+              const targetColumn = board.columns.find(c => c.id === updatedTask.columnId);
+              if (targetColumn) {
+                if (!targetColumn.tasks) {
+                  targetColumn.tasks = [];
+                }
+                targetColumn.tasks.push(updatedTask);
+                // Re-sort tasks by position
+                targetColumn.tasks.sort((a, b) => a.position - b.position);
+              }
+            }
+          });
         }
       })
       .addCase(moveTask.rejected, (state, action) => {
-        state.isLoading = false;
         state.error = action.payload as string;
       });
   },

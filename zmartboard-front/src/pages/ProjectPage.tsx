@@ -10,6 +10,7 @@ import {
 } from '../store/projects/projectsHooks';
 import { useAppDispatch } from '../store/hooks';
 import { getBoardById } from '../store/boards/boardsSlice';
+import { useBoardsState } from '../store/boards/boardsHooks';
 import { Layout, InviteUserModal, InvitationsList } from '../components';
 import { BoardsSidebar, BoardView, EditBoardModal } from '../components/boards';
 import { useBoardActions } from '../store/boards/boardsHooks';
@@ -34,6 +35,7 @@ const ProjectPage: React.FC = () => {
   const error = useProjectsError();
   const toast = useToastNotifications();
   const dispatch = useAppDispatch();
+  const { boards } = useBoardsState();
   
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteLoading, setInviteLoading] = useState(false);
@@ -41,6 +43,7 @@ const ProjectPage: React.FC = () => {
   const [selectedBoard, setSelectedBoard] = useState<Board | null>(null);
   const [showEditBoardModal, setShowEditBoardModal] = useState(false);
   const [editingBoard, setEditingBoard] = useState<Board | null>(null);
+  const [hasAutoSelected, setHasAutoSelected] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -62,6 +65,37 @@ const ProjectPage: React.FC = () => {
       getProjectInvitations(id);
     }
   }, [id, isAdmin]);
+
+  // Auto-select board: restore from localStorage or select first board
+  useEffect(() => {
+    if (!id || !boards || boards.length === 0 || hasAutoSelected) {
+      return;
+    }
+
+    const autoSelectBoard = async () => {
+      // Try to get saved board ID from localStorage
+      const savedBoardId = localStorage.getItem(`selectedBoard_${id}`);
+      
+      let boardToSelect: Board | undefined;
+      
+      // If we have a saved board ID, try to find it in the boards list
+      if (savedBoardId) {
+        boardToSelect = boards.find(b => b.id === savedBoardId);
+      }
+      
+      // If no saved board or saved board not found, select first board
+      if (!boardToSelect && boards.length > 0) {
+        boardToSelect = boards[0];
+      }
+      
+      if (boardToSelect) {
+        setHasAutoSelected(true);
+        await handleSelectBoard(boardToSelect);
+      }
+    };
+
+    autoSelectBoard();
+  }, [id, boards, hasAutoSelected]);
 
   const handleSendInvitation = async (invitationData: CreateInvitationDto) => {
     if (!id) return;
@@ -99,6 +133,10 @@ const ProjectPage: React.FC = () => {
       const result = await dispatch(getBoardById(board.id));
       if (getBoardById.fulfilled.match(result)) {
         setSelectedBoard(result.payload);
+        // Save selected board to localStorage
+        if (id) {
+          localStorage.setItem(`selectedBoard_${id}`, board.id);
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : undefined;
@@ -137,9 +175,14 @@ const ProjectPage: React.FC = () => {
 
     try {
       await deleteBoard(boardId);
-      // If the deleted board was selected, clear selection
+      // If the deleted board was selected, clear selection and localStorage
       if (selectedBoard?.id === boardId) {
         setSelectedBoard(null);
+        if (id) {
+          localStorage.removeItem(`selectedBoard_${id}`);
+        }
+        // Auto-select first remaining board
+        setHasAutoSelected(false);
       }
       toast.board.deleteSuccess();
     } catch (error) {

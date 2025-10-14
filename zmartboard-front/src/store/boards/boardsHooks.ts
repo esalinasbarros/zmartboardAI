@@ -71,15 +71,15 @@ export const useBoardActions = () => {
     updateColumn: (columnId: string, columnData: UpdateColumnDto) => 
       dispatch(updateColumn({ columnId, columnData })),
     deleteColumn: (columnId: string) => dispatch(deleteColumn(columnId)),
-    moveColumn: (columnId: string, moveData: MoveColumnDto, boardId: string) => 
-      dispatch(moveColumn({ columnId, moveData, boardId })),
+    moveColumn: (columnId: string, moveData: MoveColumnDto, oldPosition: number) => 
+      dispatch(moveColumn({ columnId, moveData, oldPosition })),
     createTask: (columnId: string, taskData: CreateTaskDto) => 
       dispatch(createTask({ columnId, taskData })),
     updateTask: (taskId: string, taskData: UpdateTaskDto) => 
       dispatch(updateTask({ taskId, taskData })),
     deleteTask: (taskId: string) => dispatch(deleteTask(taskId)),
-    moveTask: (taskId: string, moveData: MoveTaskDto, boardId: string) => 
-      dispatch(moveTask({ taskId, moveData, boardId })),
+    moveTask: (taskId: string, moveData: MoveTaskDto) => 
+      dispatch(moveTask({ taskId, moveData })),
     clearError: () => dispatch(clearError()),
     setCurrentBoard: (board: Board | null) => dispatch(setCurrentBoard(board)),
     clearBoards: () => dispatch(clearBoards()),
@@ -193,9 +193,9 @@ export const useColumnActions = () => {
     return dispatch(deleteColumn(columnId));
   };
 
-  const moveColumnAction = (columnId: string, moveData: MoveColumnDto, boardId: string) => {
+  const moveColumnAction = (columnId: string, moveData: MoveColumnDto, oldPosition: number) => {
     dispatch(clearError());
-    return dispatch(moveColumn({ columnId, moveData, boardId }));
+    return dispatch(moveColumn({ columnId, moveData, oldPosition }));
   };
 
   return {
@@ -228,9 +228,9 @@ export const useTaskActions = () => {
     return dispatch(deleteTask(taskId));
   };
 
-  const moveTaskAction = (taskId: string, moveData: MoveTaskDto, boardId: string) => {
+  const moveTaskAction = (taskId: string, moveData: MoveTaskDto) => {
     dispatch(clearError());
-    return dispatch(moveTask({ taskId, moveData, boardId }));
+    return dispatch(moveTask({ taskId, moveData }));
   };
 
   return {
@@ -299,9 +299,9 @@ export const useMoveTask = () => {
   const dispatch = useAppDispatch();
   const { isLoading, error } = useBoardsState();
 
-  const moveTaskAction = (taskId: string, moveData: MoveTaskDto, boardId: string) => {
+  const moveTaskAction = (taskId: string, moveData: MoveTaskDto) => {
     dispatch(clearError());
-    return dispatch(moveTask({ taskId, moveData, boardId }));
+    return dispatch(moveTask({ taskId, moveData }));
   };
 
   return {

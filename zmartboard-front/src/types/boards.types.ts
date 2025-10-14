@@ -118,7 +118,7 @@ export interface UpdateTaskDto {
 }
 
 export interface MoveTaskDto {
-  columnId: string;
+  targetColumnId?: string;
   position: number;
 }
 

@@ -65,7 +65,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
 
     try {
       const moveData: MoveColumnDto = { position: newPosition };
-      await moveColumn(columnId, moveData);
+      await moveColumn(columnId, moveData, board.id);
     } catch (error) {
       console.error('Error moving column:', error);
     }
@@ -87,10 +87,10 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
       const newPosition = targetColumn?.tasks?.length || 0;
 
       const moveData: MoveTaskDto = { 
-        columnId: targetColumnId,
+        targetColumnId: targetColumnId,
         position: newPosition
       };
-      await moveTask(taskId, moveData);
+      await moveTask(taskId, moveData, board.id);
     } catch (error) {
       console.error('Error moving task:', error);
     }

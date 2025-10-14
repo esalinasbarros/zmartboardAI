@@ -9,6 +9,10 @@ import {
   updateColumn,
   deleteColumn,
   moveColumn,
+  createTask,
+  updateTask,
+  deleteTask,
+  moveTask,
   clearError,
   setCurrentBoard,
   clearBoards,
@@ -19,6 +23,9 @@ import type {
   CreateColumnDto,
   UpdateColumnDto,
   MoveColumnDto,
+  CreateTaskDto,
+  UpdateTaskDto,
+  MoveTaskDto,
   Board,
 } from '../../types/boards.types';
 
@@ -66,6 +73,13 @@ export const useBoardActions = () => {
     deleteColumn: (columnId: string) => dispatch(deleteColumn(columnId)),
     moveColumn: (columnId: string, moveData: MoveColumnDto) => 
       dispatch(moveColumn({ columnId, moveData })),
+    createTask: (columnId: string, taskData: CreateTaskDto) => 
+      dispatch(createTask({ columnId, taskData })),
+    updateTask: (taskId: string, taskData: UpdateTaskDto) => 
+      dispatch(updateTask({ taskId, taskData })),
+    deleteTask: (taskId: string) => dispatch(deleteTask(taskId)),
+    moveTask: (taskId: string, moveData: MoveTaskDto) => 
+      dispatch(moveTask({ taskId, moveData })),
     clearError: () => dispatch(clearError()),
     setCurrentBoard: (board: Board | null) => dispatch(setCurrentBoard(board)),
     clearBoards: () => dispatch(clearBoards()),
@@ -189,6 +203,109 @@ export const useColumnActions = () => {
     updateColumn: updateColumnAction,
     deleteColumn: deleteColumnAction,
     moveColumn: moveColumnAction,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for managing tasks
+export const useTaskActions = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const createTaskAction = (columnId: string, taskData: CreateTaskDto) => {
+    dispatch(clearError());
+    return dispatch(createTask({ columnId, taskData }));
+  };
+
+  const updateTaskAction = (taskId: string, taskData: UpdateTaskDto) => {
+    dispatch(clearError());
+    return dispatch(updateTask({ taskId, taskData }));
+  };
+
+  const deleteTaskAction = (taskId: string) => {
+    dispatch(clearError());
+    return dispatch(deleteTask(taskId));
+  };
+
+  const moveTaskAction = (taskId: string, moveData: MoveTaskDto) => {
+    dispatch(clearError());
+    return dispatch(moveTask({ taskId, moveData }));
+  };
+
+  return {
+    createTask: createTaskAction,
+    updateTask: updateTaskAction,
+    deleteTask: deleteTaskAction,
+    moveTask: moveTaskAction,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for creating tasks
+export const useCreateTask = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const createTaskAction = (columnId: string, taskData: CreateTaskDto) => {
+    dispatch(clearError());
+    return dispatch(createTask({ columnId, taskData }));
+  };
+
+  return {
+    createTask: createTaskAction,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for updating tasks
+export const useUpdateTask = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const updateTaskAction = (taskId: string, taskData: UpdateTaskDto) => {
+    dispatch(clearError());
+    return dispatch(updateTask({ taskId, taskData }));
+  };
+
+  return {
+    updateTask: updateTaskAction,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for deleting tasks
+export const useDeleteTask = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const deleteTaskAction = (taskId: string) => {
+    dispatch(clearError());
+    return dispatch(deleteTask(taskId));
+  };
+
+  return {
+    deleteTask: deleteTaskAction,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for moving tasks
+export const useMoveTask = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const moveTaskAction = (taskId: string, moveData: MoveTaskDto) => {
+    dispatch(clearError());
+    return dispatch(moveTask({ taskId, moveData }));
+  };
+
+  return {
+    moveTask: moveTaskAction,
     isLoading,
     error,
   };

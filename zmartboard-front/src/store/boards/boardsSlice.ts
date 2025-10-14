@@ -1,14 +1,17 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { boardsApi } from '../../services/boards.api';
+import { tasksApi } from '../../services/tasks.api';
 import type {
   Board,
-  Column,
   CreateBoardDto,
   UpdateBoardDto,
   CreateColumnDto,
   UpdateColumnDto,
   MoveColumnDto,
+  CreateTaskDto,
+  UpdateTaskDto,
+  MoveTaskDto,
 } from '../../types/boards.types';
 
 // Define the initial state
@@ -140,6 +143,59 @@ export const moveColumn = createAsyncThunk(
       return response;
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to move column';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+// Async thunks for task operations
+export const createTask = createAsyncThunk(
+  'boards/createTask',
+  async ({ columnId, taskData }: { columnId: string; taskData: CreateTaskDto }, { rejectWithValue }) => {
+    try {
+      const response = await tasksApi.createTask(columnId, taskData);
+      return { columnId, task: response };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create task';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const updateTask = createAsyncThunk(
+  'boards/updateTask',
+  async ({ taskId, taskData }: { taskId: string; taskData: UpdateTaskDto }, { rejectWithValue }) => {
+    try {
+      const response = await tasksApi.updateTask(taskId, taskData);
+      return response;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update task';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const deleteTask = createAsyncThunk(
+  'boards/deleteTask',
+  async (taskId: string, { rejectWithValue }) => {
+    try {
+      await tasksApi.deleteTask(taskId);
+      return taskId;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete task';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const moveTask = createAsyncThunk(
+  'boards/moveTask',
+  async ({ taskId, moveData }: { taskId: string; moveData: MoveTaskDto }, { rejectWithValue }) => {
+    try {
+      const response = await tasksApi.moveTask(taskId, moveData);
+      return response;
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to move task';
       return rejectWithValue(errorMessage);
     }
   }
@@ -383,6 +439,185 @@ const boardsSlice = createSlice({
         }
       })
       .addCase(moveColumn.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+    // Create task
+      .addCase(createTask.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(createTask.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const { columnId, task } = action.payload;
+        
+        // Add to current board if it matches
+        if (state.currentBoard?.columns) {
+          const column = state.currentBoard.columns.find(c => c.id === columnId);
+          if (column) {
+            if (!column.tasks) {
+              column.tasks = [];
+            }
+            column.tasks.push(task);
+            // Sort tasks by position
+            column.tasks.sort((a, b) => a.position - b.position);
+          }
+        }
+        
+        // Add to boards list if it exists
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              const column = board.columns.find(c => c.id === columnId);
+              if (column) {
+                if (!column.tasks) {
+                  column.tasks = [];
+                }
+                column.tasks.push(task);
+                column.tasks.sort((a, b) => a.position - b.position);
+              }
+            }
+          });
+        }
+      })
+      .addCase(createTask.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+    // Update task
+      .addCase(updateTask.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(updateTask.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const updatedTask = action.payload;
+        
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+        
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(updateTask.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+    // Delete task
+      .addCase(deleteTask.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteTask.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const taskId = action.payload;
+        
+        // Remove from current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              column.tasks = column.tasks.filter(t => t.id !== taskId);
+            }
+          });
+        }
+        
+        // Remove from boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  column.tasks = column.tasks.filter(t => t.id !== taskId);
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(deleteTask.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload as string;
+      })
+
+    // Move task
+      .addCase(moveTask.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(moveTask.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const updatedTask = action.payload;
+        
+        // Remove task from old column and add to new column in current board
+        if (state.currentBoard?.columns) {
+          // Remove from all columns first
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              column.tasks = column.tasks.filter(t => t.id !== updatedTask.id);
+            }
+          });
+          
+          // Add to the new column
+          const targetColumn = state.currentBoard.columns.find(c => c.id === updatedTask.columnId);
+          if (targetColumn) {
+            if (!targetColumn.tasks) {
+              targetColumn.tasks = [];
+            }
+            targetColumn.tasks.push(updatedTask);
+            targetColumn.tasks.sort((a, b) => a.position - b.position);
+          }
+        }
+        
+        // Remove task from old column and add to new column in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              // Remove from all columns first
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  column.tasks = column.tasks.filter(t => t.id !== updatedTask.id);
+                }
+              });
+              
+              // Add to the new column
+              const targetColumn = board.columns.find(c => c.id === updatedTask.columnId);
+              if (targetColumn) {
+                if (!targetColumn.tasks) {
+                  targetColumn.tasks = [];
+                }
+                targetColumn.tasks.push(updatedTask);
+                targetColumn.tasks.sort((a, b) => a.position - b.position);
+              }
+            }
+          });
+        }
+      })
+      .addCase(moveTask.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload as string;
       });

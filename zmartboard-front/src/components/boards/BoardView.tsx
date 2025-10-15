@@ -135,10 +135,10 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
       </div>
 
       {/* Columns Container */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden bg-white">
         {sortedColumns.length > 0 ? (
-          <div className="h-full overflow-x-auto">
-            <div className="flex space-x-6 h-full pb-4" style={{ minWidth: 'max-content' }}>
+          <div className="h-full overflow-x-auto overflow-y-hidden p-4">
+            <div className="flex gap-3 h-full" style={{ minWidth: 'max-content' }}>
               {sortedColumns.map((column, index) => (
                 <ColumnCard
                   key={column.id}
@@ -155,7 +155,7 @@ const BoardView: React.FC<BoardViewProps> = ({ board: initialBoard, isAdmin = fa
             </div>
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center">
+          <div className="h-full flex items-center justify-center bg-gray-50">
             <div className="text-center">
               <svg className="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2h2a2 2 0 002-2z" />

@@ -106,6 +106,20 @@ export class BoardsService {
           include: {
             tasks: {
               orderBy: { position: 'asc' },
+              include: {
+                assignedUsers: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        username: true,
+                        firstName: true,
+                        lastName: true,
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -135,6 +149,20 @@ export class BoardsService {
           include: {
             tasks: {
               orderBy: { position: 'asc' },
+              include: {
+                assignedUsers: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        username: true,
+                        firstName: true,
+                        lastName: true,
+                      },
+                    },
+                  },
+                },
+              },
             },
           },
         },

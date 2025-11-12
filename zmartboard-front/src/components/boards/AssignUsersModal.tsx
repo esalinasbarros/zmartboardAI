@@ -3,6 +3,7 @@ import type { Task } from '../../types/boards.types';
 import type { ProjectMember } from '../../types/projects.types';
 import { useTaskAssignments } from '../../store/boards/boardsHooks';
 import { useCurrentProject } from '../../store/projects/projectsHooks';
+import { useToastNotifications } from '../../hooks/useToastNotifications';
 
 interface AssignUsersModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ const AssignUsersModal: React.FC<AssignUsersModalProps> = ({
 }) => {
   const currentProject = useCurrentProject();
   const { assignUser, unassignUser, isLoading } = useTaskAssignments();
+  const toast = useToastNotifications();
   const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   // Initialize selected users from task assignments
@@ -65,9 +67,20 @@ const AssignUsersModal: React.FC<AssignUsersModalProps> = ({
         await unassignUser(task.id, userId);
       }
 
+      if (toAssign.length > 0 || toUnassign.length > 0) {
+        if (toAssign.length > 0 && toUnassign.length > 0) {
+          toast.task.assignUserSuccess();
+        } else if (toAssign.length > 0) {
+          toast.task.assignUserSuccess();
+        } else {
+          toast.task.unassignUserSuccess();
+        }
+      }
+
       onClose();
     } catch (error) {
-      console.error('Error updating task assignments:', error);
+      const errorMessage = error instanceof Error ? error.message : undefined;
+      toast.task.assignUserError(errorMessage);
     }
   };
 

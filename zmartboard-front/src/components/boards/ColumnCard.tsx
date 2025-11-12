@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import type { Column, UpdateColumnDto, CreateTaskDto, Task } from '../../types/boards.types';
 import { useCreateTask } from '../../store/boards/boardsHooks';
 import CreateTaskModal from './CreateTaskModal';
@@ -234,8 +235,8 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
               )}
               
               <div className="flex items-start justify-between mb-1.5">
-                <h4 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2 group-hover:text-orange-600 transition-colors">
-                  {task.title}
+                <h4 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2 group-hover:text-orange-600 transition-colors prose prose-sm max-w-none prose-headings:font-semibold prose-headings:my-0 prose-headings:text-sm prose-p:my-0">
+                  <ReactMarkdown>{task.title}</ReactMarkdown>
                 </h4>
                 {task.archived && (
                   <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -245,9 +246,9 @@ const ColumnCard: React.FC<ColumnCardProps> = ({
               </div>
               
               {task.description && (
-                <p className="text-gray-600 text-xs line-clamp-2 mb-3 leading-relaxed">
-                  {task.description}
-                </p>
+                <div className="text-gray-600 text-xs line-clamp-2 mb-3 leading-relaxed prose prose-xs max-w-none prose-p:my-0 prose-p:text-xs prose-headings:text-xs prose-headings:my-0">
+                  <ReactMarkdown>{task.description}</ReactMarkdown>
+                </div>
               )}
               
               {/* Task metadata */}

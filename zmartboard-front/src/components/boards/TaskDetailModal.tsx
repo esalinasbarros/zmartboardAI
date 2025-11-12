@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactMarkdown from 'react-markdown';
 import type { Task, TimeEntry } from '../../types/boards.types';
 import { useUpdateTask, useTaskAssignments, useComments, useTimeEntries } from '../../store/boards/boardsHooks';
 import { createTimeEntry, updateTimeEntry, deleteTimeEntry } from '../../store/boards/boardsSlice';
@@ -101,8 +102,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       try {
         await updateTask(task.id, { title: editTitle.trim() });
         setIsEditingTitle(false);
+        toast.task.updateTitleSuccess();
       } catch (error) {
-        console.error('Error updating task title:', error);
+        const errorMessage = error instanceof Error ? error.message : undefined;
+        toast.task.updateTitleError(errorMessage);
       }
     } else {
       setIsEditingTitle(false);
@@ -115,8 +118,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       try {
         await updateTask(task.id, { description: newDescription });
         setIsEditingDescription(false);
+        toast.task.updateDescriptionSuccess();
       } catch (error) {
-        console.error('Error updating task description:', error);
+        const errorMessage = error instanceof Error ? error.message : undefined;
+        toast.task.updateDescriptionError(errorMessage);
       }
     } else {
       setIsEditingDescription(false);
@@ -134,11 +139,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     try {
       await updateTask(taskId, { deadline: deadline || undefined });
       setShowDeadlineModal(false);
+      toast.task.setDeadlineSuccess();
       // Refresh task data
       const refreshedTask = await tasksApi.getTaskById(taskId);
       setTask(refreshedTask);
     } catch (error) {
-      console.error('TaskDetailModal: Error setting deadline:', error);
+      const errorMessage = error instanceof Error ? error.message : undefined;
+      toast.task.setDeadlineError(errorMessage);
     }
   };
 
@@ -150,11 +157,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     try {
       await updateTask(taskId, { estimatedHours: estimatedHours || undefined });
       setShowEstimatedHoursModal(false);
+      toast.task.setEstimatedHoursSuccess();
       // Refresh task data
       const refreshedTask = await tasksApi.getTaskById(taskId);
       setTask(refreshedTask);
     } catch (error) {
-      console.error('TaskDetailModal: Error setting estimated hours:', error);
+      const errorMessage = error instanceof Error ? error.message : undefined;
+      toast.task.setEstimatedHoursError(errorMessage);
     }
   };
 
@@ -163,11 +172,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     if (window.confirm('¿Estás seguro de que quieres desasignar a este usuario?')) {
       try {
         await unassignUser(task.id, userId);
+        toast.task.unassignUserSuccess();
         // Refresh task data
         const refreshedTask = await tasksApi.getTaskById(task.id);
         setTask(refreshedTask);
       } catch (error) {
-        console.error('Error unassigning user:', error);
+        const errorMessage = error instanceof Error ? error.message : undefined;
+        toast.task.unassignUserError(errorMessage);
       }
     }
   };
@@ -176,11 +187,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     try {
       await addComment(taskId, content);
       setShowAddCommentModal(false);
+      toast.task.createCommentSuccess();
       // Refresh task data
       const refreshedTask = await tasksApi.getTaskById(taskId);
       setTask(refreshedTask);
     } catch (error) {
-      console.error('Error adding comment:', error);
+      const errorMessage = error instanceof Error ? error.message : undefined;
+      toast.task.createCommentError(errorMessage);
     }
   };
 
@@ -189,11 +202,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     if (window.confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
       try {
         await removeComment(commentId, task.id);
+        toast.task.deleteCommentSuccess();
         // Refresh task data
         const refreshedTask = await tasksApi.getTaskById(task.id);
         setTask(refreshedTask);
       } catch (error) {
-        console.error('Error deleting comment:', error);
+        const errorMessage = error instanceof Error ? error.message : undefined;
+        toast.task.deleteCommentError(errorMessage);
       }
     }
   };
@@ -214,11 +229,13 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       await editComment(commentId, editCommentContent.trim());
       setEditingCommentId(null);
       setEditCommentContent('');
+      toast.task.updateCommentSuccess();
       // Refresh task data
       const refreshedTask = await tasksApi.getTaskById(task.id);
       setTask(refreshedTask);
     } catch (error) {
-      console.error('Error updating comment:', error);
+      const errorMessage = error instanceof Error ? error.message : undefined;
+      toast.task.updateCommentError(errorMessage);
     }
   };
 
@@ -228,7 +245,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       if (createTimeEntry.fulfilled.match(result)) {
         setShowAddTimeEntryModal(false);
         setEditingTimeEntry(null);
-        toast.timeEntry.createSuccess();
+        toast.task.createTimeEntrySuccess();
         // Refresh task data - Redux already updates, but we need to sync local state
         if (result.payload?.task) {
           setTask(result.payload.task);
@@ -238,11 +255,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         }
       } else {
         const errorMessage = result.payload as string || 'Error al registrar el tiempo';
-        toast.timeEntry.createError(errorMessage);
+        toast.task.createTimeEntryError(errorMessage);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error al registrar el tiempo';
-      toast.timeEntry.createError(errorMessage);
+      toast.task.createTimeEntryError(errorMessage);
     }
   };
 
@@ -252,7 +269,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       if (updateTimeEntry.fulfilled.match(result)) {
         setShowAddTimeEntryModal(false);
         setEditingTimeEntry(null);
-        toast.timeEntry.updateSuccess();
+        toast.task.updateTimeEntrySuccess();
         // Refresh task data - Redux already updates, but we need to sync local state
         if (result.payload?.task) {
           setTask(result.payload.task);
@@ -262,11 +279,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         }
       } else {
         const errorMessage = result.payload as string || 'Error al actualizar el tiempo';
-        toast.timeEntry.updateError(errorMessage);
+        toast.task.updateTimeEntryError(errorMessage);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Error al actualizar el tiempo';
-      toast.timeEntry.updateError(errorMessage);
+      toast.task.updateTimeEntryError(errorMessage);
     }
   };
 
@@ -276,7 +293,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       try {
         const result = await removeTimeEntry(timeEntryId, task.id);
         if (deleteTimeEntry.fulfilled.match(result)) {
-          toast.timeEntry.deleteSuccess();
+          toast.task.deleteTimeEntrySuccess();
           // Refresh task data
           if (result.payload?.task) {
             setTask(result.payload.task);
@@ -286,11 +303,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           }
         } else {
           const errorMessage = result.payload as string || 'Error al eliminar el tiempo';
-          toast.timeEntry.deleteError(errorMessage);
+          toast.task.deleteTimeEntryError(errorMessage);
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Error al eliminar el tiempo';
-        toast.timeEntry.deleteError(errorMessage);
+        toast.task.deleteTimeEntryError(errorMessage);
       }
     }
   };
@@ -348,8 +365,8 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </div>
             ) : (
               <div className="flex items-center space-x-2 flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-gray-900 truncate flex-1">
-                  {task.title}
+                <h2 className="text-lg font-semibold text-gray-900 flex-1 prose prose-sm max-w-none prose-headings:font-semibold prose-headings:my-0">
+                  <ReactMarkdown>{task.title}</ReactMarkdown>
                 </h2>
                 <button
                   onClick={handleStartEditTitle}
@@ -446,7 +463,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 ) : (
                   <div className="cursor-pointer" onClick={handleStartEditDescription}>
                     {task.description ? (
-                      <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{task.description}</p>
+                      <div className="prose prose-sm max-w-none text-sm text-gray-700 leading-relaxed prose-headings:font-semibold prose-p:my-2">
+                        <ReactMarkdown>{task.description}</ReactMarkdown>
+                      </div>
                     ) : (
                       <p className="text-sm text-gray-400 italic">Click para agregar descripción...</p>
                     )}
@@ -532,9 +551,11 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                               )}
                             </div>
                           </div>
-                          {entry.description && (
-                            <p className="text-xs text-gray-600 mt-1 pl-8">{entry.description}</p>
-                          )}
+                        {entry.description && (
+                          <div className="prose prose-xs max-w-none text-xs text-gray-600 mt-1 pl-8 prose-p:my-1">
+                            <ReactMarkdown>{entry.description}</ReactMarkdown>
+                          </div>
+                        )}
                         </div>
                       );
                     })
@@ -658,7 +679,9 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                             </div>
                           </div>
                         ) : (
-                          <p className="text-sm text-gray-800 leading-relaxed">{comment.content}</p>
+                          <div className="prose prose-sm max-w-none text-sm text-gray-800 leading-relaxed prose-p:my-2">
+                            <ReactMarkdown>{comment.content}</ReactMarkdown>
+                          </div>
                         )}
                       </div>
                     );

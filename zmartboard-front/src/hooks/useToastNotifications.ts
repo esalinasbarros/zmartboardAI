@@ -69,13 +69,31 @@ export const useToastNotifications = () => {
     moveSuccess: () => toast.showSuccess('¡Columna movida exitosamente!'),
   };
 
-  const timeEntryToasts = {
-    createSuccess: () => toast.showSuccess('¡Tiempo registrado exitosamente!'),
-    createError: (message?: string) => toast.showError(message || 'Error al registrar el tiempo. Por favor intenta de nuevo.'),
-    updateSuccess: () => toast.showSuccess('¡Tiempo actualizado exitosamente!'),
-    updateError: (message?: string) => toast.showError(message || 'Error al actualizar el tiempo. Por favor intenta de nuevo.'),
-    deleteSuccess: () => toast.showSuccess('¡Tiempo eliminado exitosamente!'),
-    deleteError: (message?: string) => toast.showError(message || 'Error al eliminar el tiempo. Por favor intenta de nuevo.'),
+  const taskToasts = {
+    updateTitleSuccess: () => toast.showSuccess('¡Título actualizado exitosamente!'),
+    updateTitleError: (message?: string) => toast.showError(message || 'Error al actualizar el título. Por favor intenta de nuevo.'),
+    updateDescriptionSuccess: () => toast.showSuccess('¡Descripción actualizada exitosamente!'),
+    updateDescriptionError: (message?: string) => toast.showError(message || 'Error al actualizar la descripción. Por favor intenta de nuevo.'),
+    setDeadlineSuccess: () => toast.showSuccess('¡Fecha límite actualizada exitosamente!'),
+    setDeadlineError: (message?: string) => toast.showError(message || 'Error al actualizar la fecha límite. Por favor intenta de nuevo.'),
+    setEstimatedHoursSuccess: () => toast.showSuccess('¡Tiempo estimado actualizado exitosamente!'),
+    setEstimatedHoursError: (message?: string) => toast.showError(message || 'Error al actualizar el tiempo estimado. Por favor intenta de nuevo.'),
+    assignUserSuccess: () => toast.showSuccess('¡Usuario asignado exitosamente!'),
+    assignUserError: (message?: string) => toast.showError(message || 'Error al asignar el usuario. Por favor intenta de nuevo.'),
+    unassignUserSuccess: () => toast.showSuccess('¡Usuario desasignado exitosamente!'),
+    unassignUserError: (message?: string) => toast.showError(message || 'Error al desasignar el usuario. Por favor intenta de nuevo.'),
+    createCommentSuccess: () => toast.showSuccess('¡Comentario creado exitosamente!'),
+    createCommentError: (message?: string) => toast.showError(message || 'Error al crear el comentario. Por favor intenta de nuevo.'),
+    updateCommentSuccess: () => toast.showSuccess('¡Comentario actualizado exitosamente!'),
+    updateCommentError: (message?: string) => toast.showError(message || 'Error al actualizar el comentario. Por favor intenta de nuevo.'),
+    deleteCommentSuccess: () => toast.showSuccess('¡Comentario eliminado exitosamente!'),
+    deleteCommentError: (message?: string) => toast.showError(message || 'Error al eliminar el comentario. Por favor intenta de nuevo.'),
+    createTimeEntrySuccess: () => toast.showSuccess('¡Tiempo registrado exitosamente!'),
+    createTimeEntryError: (message?: string) => toast.showError(message || 'Error al registrar el tiempo. Por favor intenta de nuevo.'),
+    updateTimeEntrySuccess: () => toast.showSuccess('¡Tiempo actualizado exitosamente!'),
+    updateTimeEntryError: (message?: string) => toast.showError(message || 'Error al actualizar el tiempo. Por favor intenta de nuevo.'),
+    deleteTimeEntrySuccess: () => toast.showSuccess('¡Tiempo eliminado exitosamente!'),
+    deleteTimeEntryError: (message?: string) => toast.showError(message || 'Error al eliminar el tiempo. Por favor intenta de nuevo.'),
   };
 
   const generalToasts = {
@@ -94,7 +112,7 @@ export const useToastNotifications = () => {
     invitation: invitationToasts,
     board: boardToasts,
     column: columnToasts,
-    timeEntry: timeEntryToasts,
+    task: taskToasts,
     general: generalToasts,
   };
 };

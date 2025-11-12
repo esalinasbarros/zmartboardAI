@@ -280,6 +280,53 @@ export const deleteComment = createAsyncThunk(
   }
 );
 
+// Async thunks for time entry operations
+export const createTimeEntry = createAsyncThunk(
+  'boards/createTimeEntry',
+  async ({ taskId, hours, description, date }: { taskId: string; hours: number; description?: string; date?: string }, { rejectWithValue }) => {
+    try {
+      await tasksApi.createTimeEntry(taskId, { hours, description, date });
+      // Fetch updated task to get full data including time entries
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create time entry';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const updateTimeEntry = createAsyncThunk(
+  'boards/updateTimeEntry',
+  async ({ timeEntryId, hours, description, date }: { timeEntryId: string; hours?: number; description?: string; date?: string }, { rejectWithValue }) => {
+    try {
+      const response = await tasksApi.updateTimeEntry(timeEntryId, { hours, description, date });
+      // Fetch updated task to get full data including time entries
+      const taskId = response.timeEntry.taskId;
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update time entry';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const deleteTimeEntry = createAsyncThunk(
+  'boards/deleteTimeEntry',
+  async ({ timeEntryId, taskId }: { timeEntryId: string; taskId: string }, { rejectWithValue }) => {
+    try {
+      await tasksApi.deleteTimeEntry(timeEntryId);
+      // Fetch updated task to get full data including time entries
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete time entry';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 // Create the slice
 const boardsSlice = createSlice({
   name: 'boards',
@@ -912,6 +959,123 @@ const boardsSlice = createSlice({
         }
       })
       .addCase(deleteComment.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Create time entry
+      .addCase(createTimeEntry.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(createTimeEntry.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(createTimeEntry.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Update time entry
+      .addCase(updateTimeEntry.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateTimeEntry.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(updateTimeEntry.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Delete time entry
+      .addCase(deleteTimeEntry.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(deleteTimeEntry.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(deleteTimeEntry.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

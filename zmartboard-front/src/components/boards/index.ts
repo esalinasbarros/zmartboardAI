@@ -12,3 +12,4 @@ export { default as SetDeadlineModal } from './SetDeadlineModal';
 export { default as SetEstimatedHoursModal } from './SetEstimatedHoursModal';
 export { default as AssignUsersModal } from './AssignUsersModal';
 export { default as AddCommentModal } from './AddCommentModal';
+export { default as AddTimeEntryModal } from './AddTimeEntryModal';

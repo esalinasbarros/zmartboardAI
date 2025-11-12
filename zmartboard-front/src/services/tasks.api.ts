@@ -126,4 +126,20 @@ export const tasksApi = {
     const response = await api.delete(`/tasks/comments/${commentId}`);
     return response.data;
   },
+
+  // Time entry operations
+  createTimeEntry: async (taskId: string, data: { hours: number; description?: string; date?: string }): Promise<{ message: string; timeEntry: any }> => {
+    const response = await api.post(`/tasks/${taskId}/time-entries`, data);
+    return response.data;
+  },
+
+  updateTimeEntry: async (timeEntryId: string, data: { hours?: number; description?: string; date?: string }): Promise<{ message: string; timeEntry: any }> => {
+    const response = await api.put(`/tasks/time-entries/${timeEntryId}`, data);
+    return response.data;
+  },
+
+  deleteTimeEntry: async (timeEntryId: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/tasks/time-entries/${timeEntryId}`);
+    return response.data;
+  },
 };

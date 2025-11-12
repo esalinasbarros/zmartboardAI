@@ -18,6 +18,9 @@ import {
   createComment,
   updateComment,
   deleteComment,
+  createTimeEntry,
+  updateTimeEntry,
+  deleteTimeEntry,
   clearError,
   setCurrentBoard,
   clearBoards,
@@ -363,6 +366,35 @@ export const useComments = () => {
     addComment,
     editComment,
     removeComment,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for time entries
+export const useTimeEntries = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const addTimeEntry = (taskId: string, hours: number, description?: string, date?: string) => {
+    dispatch(clearError());
+    return dispatch(createTimeEntry({ taskId, hours, description, date }));
+  };
+
+  const editTimeEntry = (timeEntryId: string, hours?: number, description?: string, date?: string) => {
+    dispatch(clearError());
+    return dispatch(updateTimeEntry({ timeEntryId, hours, description, date }));
+  };
+
+  const removeTimeEntry = (timeEntryId: string, taskId: string) => {
+    dispatch(clearError());
+    return dispatch(deleteTimeEntry({ timeEntryId, taskId }));
+  };
+
+  return {
+    addTimeEntry,
+    editTimeEntry,
+    removeTimeEntry,
     isLoading,
     error,
   };

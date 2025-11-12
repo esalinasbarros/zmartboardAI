@@ -67,7 +67,15 @@ export const useToastNotifications = () => {
     deleteSuccess: () => toast.showSuccess('¡Columna eliminada exitosamente!'),
     deleteError: (message?: string) => toast.showError(message || 'Error al eliminar la columna. Por favor intenta de nuevo.'),
     moveSuccess: () => toast.showSuccess('¡Columna movida exitosamente!'),
-    moveError: (message?: string) => toast.showError(message || 'Error al mover la columna. Por favor intenta de nuevo.'),
+  };
+
+  const timeEntryToasts = {
+    createSuccess: () => toast.showSuccess('¡Tiempo registrado exitosamente!'),
+    createError: (message?: string) => toast.showError(message || 'Error al registrar el tiempo. Por favor intenta de nuevo.'),
+    updateSuccess: () => toast.showSuccess('¡Tiempo actualizado exitosamente!'),
+    updateError: (message?: string) => toast.showError(message || 'Error al actualizar el tiempo. Por favor intenta de nuevo.'),
+    deleteSuccess: () => toast.showSuccess('¡Tiempo eliminado exitosamente!'),
+    deleteError: (message?: string) => toast.showError(message || 'Error al eliminar el tiempo. Por favor intenta de nuevo.'),
   };
 
   const generalToasts = {
@@ -86,6 +94,7 @@ export const useToastNotifications = () => {
     invitation: invitationToasts,
     board: boardToasts,
     column: columnToasts,
+    timeEntry: timeEntryToasts,
     general: generalToasts,
   };
 };

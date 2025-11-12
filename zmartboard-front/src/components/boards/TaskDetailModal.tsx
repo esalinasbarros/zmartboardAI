@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import type { Task } from '../../types/boards.types';
-import { useUpdateTask, useTaskAssignments, useComments } from '../../store/boards/boardsHooks';
+import type { Task, TimeEntry } from '../../types/boards.types';
+import { useUpdateTask, useTaskAssignments, useComments, useTimeEntries } from '../../store/boards/boardsHooks';
+import { createTimeEntry, updateTimeEntry, deleteTimeEntry } from '../../store/boards/boardsSlice';
 import { useUser } from '../../store/auth/authHooks';
+import { useToastNotifications } from '../../hooks/useToastNotifications';
 import { tasksApi } from '../../services/tasks.api';
 import SetDeadlineModal from './SetDeadlineModal';
 import SetEstimatedHoursModal from './SetEstimatedHoursModal';
 import AssignUsersModal from './AssignUsersModal';
 import AddCommentModal from './AddCommentModal';
+import AddTimeEntryModal from './AddTimeEntryModal';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -29,11 +32,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [showAddCommentModal, setShowAddCommentModal] = useState(false);
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
   const [editCommentContent, setEditCommentContent] = useState('');
+  const [showAddTimeEntryModal, setShowAddTimeEntryModal] = useState(false);
+  const [editingTimeEntry, setEditingTimeEntry] = useState<TimeEntry | null>(null);
   const [task, setTask] = useState<Task | null>(initialTask);
   const { updateTask, isLoading: isUpdatingTask } = useUpdateTask();
   const { unassignUser, isLoading: isUnassigning } = useTaskAssignments();
   const { addComment, editComment, removeComment, isLoading: isAddingComment } = useComments();
+  const { addTimeEntry, editTimeEntry, removeTimeEntry, isLoading: isTimeEntryLoading } = useTimeEntries();
   const currentUser = useUser();
+  const toast = useToastNotifications();
 
   // Update task when initialTask prop changes or when modal opens
   useEffect(() => {
@@ -44,7 +51,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   // Refresh task data when assignments change (after modal closes)
   useEffect(() => {
-    if (isOpen && initialTask && !showAssignUsersModal && !showAddCommentModal) {
+    if (isOpen && initialTask && !showAssignUsersModal && !showAddCommentModal && !showAddTimeEntryModal) {
       const refreshTask = async () => {
         try {
           const refreshedTask = await tasksApi.getTaskById(initialTask.id);
@@ -55,7 +62,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       };
       refreshTask();
     }
-  }, [isOpen, initialTask, showAssignUsersModal, showAddCommentModal]);
+  }, [isOpen, initialTask, showAssignUsersModal, showAddCommentModal, showAddTimeEntryModal]);
 
   if (!isOpen || !task) return null;
 
@@ -215,6 +222,84 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     }
   };
 
+  const handleAddTimeEntry = async (taskId: string, hours: number, description?: string, date?: string) => {
+    try {
+      const result = await addTimeEntry(taskId, hours, description, date);
+      if (createTimeEntry.fulfilled.match(result)) {
+        setShowAddTimeEntryModal(false);
+        setEditingTimeEntry(null);
+        toast.timeEntry.createSuccess();
+        // Refresh task data - Redux already updates, but we need to sync local state
+        if (result.payload?.task) {
+          setTask(result.payload.task);
+        } else {
+          const refreshedTask = await tasksApi.getTaskById(taskId);
+          setTask(refreshedTask);
+        }
+      } else {
+        const errorMessage = result.payload as string || 'Error al registrar el tiempo';
+        toast.timeEntry.createError(errorMessage);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al registrar el tiempo';
+      toast.timeEntry.createError(errorMessage);
+    }
+  };
+
+  const handleEditTimeEntry = async (timeEntryId: string, hours: number, description?: string, date?: string) => {
+    try {
+      const result = await editTimeEntry(timeEntryId, hours, description, date);
+      if (updateTimeEntry.fulfilled.match(result)) {
+        setShowAddTimeEntryModal(false);
+        setEditingTimeEntry(null);
+        toast.timeEntry.updateSuccess();
+        // Refresh task data - Redux already updates, but we need to sync local state
+        if (result.payload?.task) {
+          setTask(result.payload.task);
+        } else if (task) {
+          const refreshedTask = await tasksApi.getTaskById(task.id);
+          setTask(refreshedTask);
+        }
+      } else {
+        const errorMessage = result.payload as string || 'Error al actualizar el tiempo';
+        toast.timeEntry.updateError(errorMessage);
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Error al actualizar el tiempo';
+      toast.timeEntry.updateError(errorMessage);
+    }
+  };
+
+  const handleDeleteTimeEntry = async (timeEntryId: string) => {
+    if (!task) return;
+    if (window.confirm('¿Estás seguro de que quieres eliminar este registro de tiempo?')) {
+      try {
+        const result = await removeTimeEntry(timeEntryId, task.id);
+        if (deleteTimeEntry.fulfilled.match(result)) {
+          toast.timeEntry.deleteSuccess();
+          // Refresh task data
+          if (result.payload?.task) {
+            setTask(result.payload.task);
+          } else {
+            const refreshedTask = await tasksApi.getTaskById(task.id);
+            setTask(refreshedTask);
+          }
+        } else {
+          const errorMessage = result.payload as string || 'Error al eliminar el tiempo';
+          toast.timeEntry.deleteError(errorMessage);
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Error al eliminar el tiempo';
+        toast.timeEntry.deleteError(errorMessage);
+      }
+    }
+  };
+
+  const handleStartEditTimeEntry = (timeEntry: TimeEntry) => {
+    setEditingTimeEntry(timeEntry);
+    setShowAddTimeEntryModal(true);
+  };
+
   const handleCloseEstimatedHoursModal = () => {
     setShowEstimatedHoursModal(false);
   };
@@ -365,6 +450,111 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     ) : (
                       <p className="text-sm text-gray-400 italic">Click para agregar descripción...</p>
                     )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Time Entries */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide flex items-center">
+                  <svg className="w-3.5 h-3.5 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Tiempo registrado
+                </h3>
+                {task.assignedUsers && task.assignedUsers.some(ut => ut.userId === currentUser?.id) && (
+                  <button
+                    onClick={() => {
+                      setEditingTimeEntry(null);
+                      setShowAddTimeEntryModal(true);
+                    }}
+                    className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                    title="Registrar tiempo"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <div className="bg-gray-50 rounded-lg border border-gray-200">
+                <div className="max-h-96 overflow-y-auto p-3 space-y-2">
+                  {task.timeEntries && task.timeEntries.length > 0 ? (
+                    task.timeEntries.map((entry) => {
+                      const isOwner = currentUser?.id === entry.userId;
+                      return (
+                        <div key={entry.id} className="p-2 bg-white rounded-lg border border-gray-200 hover:border-orange-200 transition-colors group">
+                          <div className="flex items-start justify-between mb-1">
+                            <div className="flex items-center space-x-2 flex-1 min-w-0">
+                              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                <span className="text-xs font-medium text-blue-600">
+                                  {entry.user?.firstName?.charAt(0) || entry.user?.username?.charAt(0) || 'U'}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-gray-700 truncate">
+                                  {entry.user?.firstName && entry.user?.lastName
+                                    ? `${entry.user.firstName} ${entry.user.lastName}`
+                                    : entry.user?.username || 'Usuario'}
+                                </p>
+                                {entry.date && (
+                                  <p className="text-xs text-gray-500">
+                                    {formatDate(entry.date)}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-bold text-gray-800">{entry.hours}h</span>
+                              {isOwner && (
+                                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={() => handleStartEditTimeEntry(entry)}
+                                    className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                                    title="Editar tiempo"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteTimeEntry(entry.id)}
+                                    className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                    title="Eliminar tiempo"
+                                  >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          {entry.description && (
+                            <p className="text-xs text-gray-600 mt-1 pl-8">{entry.description}</p>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-3">
+                      <p className="text-xs text-gray-400 mb-1">Sin tiempo registrado</p>
+                      {task.assignedUsers && !task.assignedUsers.some(ut => ut.userId === currentUser?.id) && (
+                        <p className="text-xs text-orange-600 italic">Debes estar asignado a esta tarea para registrar tiempo</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+                {task.timeEntries && task.timeEntries.length > 0 && (
+                  <div className="px-3 py-2 border-t border-gray-200 bg-white rounded-b-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-gray-600">Total:</span>
+                      <span className="text-sm font-bold text-orange-600">
+                        {task.timeEntries.reduce((sum, e) => sum + e.hours, 0).toFixed(1)}h
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
@@ -645,30 +835,6 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </div>
             </div>
 
-            {/* Time Entries Section */}
-            {task.timeEntries && task.timeEntries.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Tiempo registrado</h3>
-                <div className="space-y-2">
-                  {task.timeEntries.map((entry) => (
-                    <div key={entry.id} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-200">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-blue-600">
-                            {entry.user?.firstName?.charAt(0) || entry.user?.username?.charAt(0) || 'U'}
-                          </span>
-                        </div>
-                        <span className="text-xs text-gray-600">
-                          {entry.user?.firstName || entry.user?.username || 'Usuario'}
-                        </span>
-                      </div>
-                      <span className="text-sm font-bold text-gray-800">{entry.hours}h</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             {/* Status & Metadata */}
             <div className="border-t border-gray-200 pt-4">
               <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Información</h3>
@@ -742,6 +908,22 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         onSubmit={handleAddComment}
         task={task}
         isLoading={isAddingComment}
+      />
+
+      {/* Add/Edit Time Entry Modal */}
+      <AddTimeEntryModal
+        isOpen={showAddTimeEntryModal}
+        onClose={() => {
+          setShowAddTimeEntryModal(false);
+          setEditingTimeEntry(null);
+        }}
+        onSubmit={editingTimeEntry 
+          ? (_taskId, hours, description, date) => handleEditTimeEntry(editingTimeEntry.id, hours, description, date)
+          : handleAddTimeEntry
+        }
+        task={task}
+        timeEntry={editingTimeEntry}
+        isLoading={isTimeEntryLoading}
       />
     </div>
   );

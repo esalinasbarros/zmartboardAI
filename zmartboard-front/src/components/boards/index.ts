@@ -10,3 +10,4 @@ export { default as CreateTaskModal } from './CreateTaskModal';
 export { default as TaskDetailModal } from './TaskDetailModal';
 export { default as SetDeadlineModal } from './SetDeadlineModal';
 export { default as SetEstimatedHoursModal } from './SetEstimatedHoursModal';
+export { default as AssignUsersModal } from './AssignUsersModal';

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { Task } from '../../types/boards.types';
-import { useUpdateTask } from '../../store/boards/boardsHooks';
+import { useUpdateTask, useTaskAssignments } from '../../store/boards/boardsHooks';
+import { tasksApi } from '../../services/tasks.api';
 import SetDeadlineModal from './SetDeadlineModal';
 import SetEstimatedHoursModal from './SetEstimatedHoursModal';
+import AssignUsersModal from './AssignUsersModal';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -13,7 +15,7 @@ interface TaskDetailModalProps {
 const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   isOpen,
   onClose,
-  task,
+  task: initialTask,
 }) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -21,7 +23,33 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [editDescription, setEditDescription] = useState('');
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [showEstimatedHoursModal, setShowEstimatedHoursModal] = useState(false);
+  const [showAssignUsersModal, setShowAssignUsersModal] = useState(false);
+  const [task, setTask] = useState<Task | null>(initialTask);
   const { updateTask, isLoading: isUpdatingTask } = useUpdateTask();
+  const { unassignUser, isLoading: isUnassigning } = useTaskAssignments();
+
+  // Update task when initialTask prop changes or when modal opens
+  useEffect(() => {
+    if (initialTask) {
+      setTask(initialTask);
+    }
+  }, [initialTask]);
+
+  // Refresh task data when assignments change (after modal closes)
+  useEffect(() => {
+    if (isOpen && initialTask && !showAssignUsersModal) {
+      const refreshTask = async () => {
+        try {
+          const refreshedTask = await tasksApi.getTaskById(initialTask.id);
+          setTask(refreshedTask);
+        } catch (error) {
+          console.error('Error refreshing task:', error);
+        }
+      };
+      refreshTask();
+    }
+  }, [isOpen, initialTask, showAssignUsersModal]);
+
   if (!isOpen || !task) return null;
 
   const formatDate = (date: string | Date) => {
@@ -89,12 +117,12 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   };
 
   const handleSetDeadline = async (taskId: string, deadline: string | null) => {
-    console.log('TaskDetailModal: handleSetDeadline called', { taskId, deadline });
     try {
-      console.log('TaskDetailModal: Calling updateTask with', { taskId, deadline: deadline || undefined });
       await updateTask(taskId, { deadline: deadline || undefined });
-      console.log('TaskDetailModal: updateTask completed successfully');
       setShowDeadlineModal(false);
+      // Refresh task data
+      const refreshedTask = await tasksApi.getTaskById(taskId);
+      setTask(refreshedTask);
     } catch (error) {
       console.error('TaskDetailModal: Error setting deadline:', error);
     }
@@ -105,14 +133,28 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   };
 
   const handleSetEstimatedHours = async (taskId: string, estimatedHours: number | null) => {
-    console.log('TaskDetailModal: handleSetEstimatedHours called', { taskId, estimatedHours });
     try {
-      console.log('TaskDetailModal: Calling updateTask with', { taskId, estimatedHours: estimatedHours || undefined });
       await updateTask(taskId, { estimatedHours: estimatedHours || undefined });
-      console.log('TaskDetailModal: updateTask completed successfully');
       setShowEstimatedHoursModal(false);
+      // Refresh task data
+      const refreshedTask = await tasksApi.getTaskById(taskId);
+      setTask(refreshedTask);
     } catch (error) {
       console.error('TaskDetailModal: Error setting estimated hours:', error);
+    }
+  };
+
+  const handleUnassignUser = async (userId: string) => {
+    if (!task) return;
+    if (window.confirm('¿Estás seguro de que quieres desasignar a este usuario?')) {
+      try {
+        await unassignUser(task.id, userId);
+        // Refresh task data
+        const refreshedTask = await tasksApi.getTaskById(task.id);
+        setTask(refreshedTask);
+      } catch (error) {
+        console.error('Error unassigning user:', error);
+      }
     }
   };
 
@@ -303,7 +345,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3">Acciones</h3>
               <div className="space-y-2">
                 {/* Assign Users Button */}
-                <button className="w-full px-3 py-2.5 bg-white border border-gray-200 hover:border-orange-300 hover:bg-orange-50 text-sm font-medium text-gray-700 hover:text-orange-600 rounded-lg transition-all flex items-center space-x-2 group">
+                <button 
+                  onClick={() => setShowAssignUsersModal(true)}
+                  className="w-full px-3 py-2.5 bg-white border border-gray-200 hover:border-orange-300 hover:bg-orange-50 text-sm font-medium text-gray-700 hover:text-orange-600 rounded-lg transition-all flex items-center space-x-2 group"
+                >
                   <svg className="w-4 h-4 text-gray-400 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                   </svg>
@@ -403,23 +448,52 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
             {/* Assigned Users Section */}
             <div className="mb-6">
-              <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Asignados</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Asignados</h3>
+                {task.assignedUsers && task.assignedUsers.length > 0 && (
+                  <button
+                    onClick={() => setShowAssignUsersModal(true)}
+                    className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors"
+                    title="Editar asignaciones"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </button>
+                )}
+              </div>
               <div className="space-y-2">
                 {task.assignedUsers && task.assignedUsers.length > 0 ? (
-                  task.assignedUsers.map((userTask) => (
-                    <div key={userTask.id} className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200">
-                      <div className="w-7 h-7 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                        {userTask.user?.firstName?.charAt(0) || userTask.user?.username?.charAt(0) || 'U'}
+                  task.assignedUsers.map((userTask) => {
+
+                    return (
+                      <div key={userTask.id} className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:border-orange-200 transition-colors group">
+                        <div className="w-7 h-7 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                          {userTask.user?.firstName?.charAt(0) || userTask.user?.username?.charAt(0) || 'U'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">
+                            {userTask.user?.firstName && userTask.user?.lastName
+                              ? `${userTask.user.firstName} ${userTask.user.lastName}`
+                              : userTask.user?.username || 'Usuario'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUnassignUser(userTask.userId);
+                          }}
+                          disabled={isUnassigning}
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                          title="Desasignar usuario"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate">
-                          {userTask.user?.firstName && userTask.user?.lastName
-                            ? `${userTask.user.firstName} ${userTask.user.lastName}`
-                            : userTask.user?.username || 'Usuario'}
-                        </p>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <p className="text-xs text-gray-400 text-center py-3 bg-white rounded-lg border border-gray-200">Sin asignar</p>
                 )}
@@ -496,6 +570,24 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         onSubmit={handleSetEstimatedHours}
         task={task}
         isLoading={isUpdatingTask}
+      />
+
+      {/* Assign Users Modal */}
+      <AssignUsersModal
+        isOpen={showAssignUsersModal}
+        onClose={async () => {
+          setShowAssignUsersModal(false);
+          // Refresh task data after closing assignment modal
+          if (task) {
+            try {
+              const refreshedTask = await tasksApi.getTaskById(task.id);
+              setTask(refreshedTask);
+            } catch (error) {
+              console.error('Error refreshing task:', error);
+            }
+          }
+        }}
+        task={task}
       />
     </div>
   );

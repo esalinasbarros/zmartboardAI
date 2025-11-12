@@ -13,6 +13,8 @@ import {
   updateTask,
   deleteTask,
   moveTask,
+  assignUserToTask,
+  unassignUserFromTask,
   clearError,
   setCurrentBoard,
   clearBoards,
@@ -306,6 +308,29 @@ export const useMoveTask = () => {
 
   return {
     moveTask: moveTaskAction,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for task assignments
+export const useTaskAssignments = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const assignUser = (taskId: string, userId: string) => {
+    dispatch(clearError());
+    return dispatch(assignUserToTask({ taskId, userId }));
+  };
+
+  const unassignUser = (taskId: string, userId: string) => {
+    dispatch(clearError());
+    return dispatch(unassignUserFromTask({ taskId, userId }));
+  };
+
+  return {
+    assignUser,
+    unassignUser,
     isLoading,
     error,
   };

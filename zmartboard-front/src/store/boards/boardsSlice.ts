@@ -202,6 +202,37 @@ export const moveTask = createAsyncThunk(
   }
 );
 
+// Async thunks for task assignment operations
+export const assignUserToTask = createAsyncThunk(
+  'boards/assignUserToTask',
+  async ({ taskId, userId }: { taskId: string; userId: string }, { rejectWithValue }) => {
+    try {
+      await tasksApi.assignUserToTask(taskId, userId);
+      // Fetch updated task to get full data including assignments
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to assign user to task';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const unassignUserFromTask = createAsyncThunk(
+  'boards/unassignUserFromTask',
+  async ({ taskId, userId }: { taskId: string; userId: string }, { rejectWithValue }) => {
+    try {
+      await tasksApi.unassignUserFromTask(taskId, userId);
+      // Fetch updated task to get full data including assignments
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to unassign user from task';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 // Create the slice
 const boardsSlice = createSlice({
   name: 'boards',
@@ -639,6 +670,84 @@ const boardsSlice = createSlice({
         }
       })
       .addCase(moveTask.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Assign user to task
+      .addCase(assignUserToTask.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(assignUserToTask.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+        
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+        
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(assignUserToTask.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Unassign user from task
+      .addCase(unassignUserFromTask.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(unassignUserFromTask.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+        
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+        
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(unassignUserFromTask.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

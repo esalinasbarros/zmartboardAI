@@ -93,4 +93,20 @@ export const tasksApi = {
     const response = await api.patch<Task>(`/tasks/${taskId}/unarchive`);
     return response.data;
   },
+
+  // Task assignment operations
+  assignUserToTask: async (taskId: string, userId: string): Promise<{ message: string; assignment: any }> => {
+    const response = await api.post(`/tasks/${taskId}/assign`, { userId });
+    return response.data;
+  },
+
+  unassignUserFromTask: async (taskId: string, userId: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/tasks/${taskId}/assign/${userId}`);
+    return response.data;
+  },
+
+  getTaskAssignments: async (taskId: string): Promise<any[]> => {
+    const response = await api.get(`/tasks/${taskId}/assignments`);
+    return response.data;
+  },
 };

@@ -61,6 +61,7 @@ export interface Comment {
   taskId: string;
   createdAt: string | Date;
   updatedAt: string | Date;
+  user?: User;
 }
 
 export interface Task {

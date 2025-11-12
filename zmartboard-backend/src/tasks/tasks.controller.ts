@@ -20,6 +20,8 @@ import {
   UnassignUserDto,
   CreateTimeEntryDto,
   UpdateTimeEntryDto,
+  CreateCommentDto,
+  UpdateCommentDto,
 } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthenticatedRequest } from '../types/authenticated-request.type';
@@ -331,5 +333,34 @@ export class TasksController {
     @Request() req: AuthenticatedRequest,
   ) {
     return this.tasksService.getUserTaskTimeEntries(taskId, req.user.id);
+  }
+
+  // Create comment for task
+  @Post(':taskId/comments')
+  async createComment(
+    @Param('taskId') taskId: string,
+    @Body() createCommentDto: CreateCommentDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.tasksService.createComment(taskId, createCommentDto, req.user.id);
+  }
+
+  // Update comment
+  @Put('comments/:commentId')
+  async updateComment(
+    @Param('commentId') commentId: string,
+    @Body() updateCommentDto: UpdateCommentDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.tasksService.updateComment(commentId, updateCommentDto, req.user.id);
+  }
+
+  // Delete comment
+  @Delete('comments/:commentId')
+  async deleteComment(
+    @Param('commentId') commentId: string,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    return this.tasksService.deleteComment(commentId, req.user.id);
   }
 }

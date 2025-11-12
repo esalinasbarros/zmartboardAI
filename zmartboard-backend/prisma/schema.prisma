@@ -51,6 +51,7 @@ model User {
   receivedInvitations ProjectInvitation[] @relation("InvitationReceiver")
   assignedTasks      UserTask[]
   timeEntries        TimeEntry[]
+  comments           Comment[]
 
   @@map("users")
 }
@@ -182,6 +183,7 @@ model Comment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@map("comments")
 }
 

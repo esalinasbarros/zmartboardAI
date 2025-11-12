@@ -6,6 +6,7 @@ import type {
   UpdateTaskDto,
   MoveTaskDto,
   DeleteResponse,
+  Comment,
 } from '../types/boards.types';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
@@ -107,6 +108,22 @@ export const tasksApi = {
 
   getTaskAssignments: async (taskId: string): Promise<any[]> => {
     const response = await api.get(`/tasks/${taskId}/assignments`);
+    return response.data;
+  },
+
+  // Comment operations
+  createComment: async (taskId: string, content: string): Promise<{ message: string; comment: Comment }> => {
+    const response = await api.post(`/tasks/${taskId}/comments`, { content });
+    return response.data;
+  },
+
+  updateComment: async (commentId: string, content: string): Promise<{ message: string; comment: Comment }> => {
+    const response = await api.put(`/tasks/comments/${commentId}`, { content });
+    return response.data;
+  },
+
+  deleteComment: async (commentId: string): Promise<{ message: string }> => {
+    const response = await api.delete(`/tasks/comments/${commentId}`);
     return response.data;
   },
 };

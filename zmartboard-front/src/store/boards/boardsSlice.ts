@@ -233,6 +233,53 @@ export const unassignUserFromTask = createAsyncThunk(
   }
 );
 
+// Async thunks for comment operations
+export const createComment = createAsyncThunk(
+  'boards/createComment',
+  async ({ taskId, content }: { taskId: string; content: string }, { rejectWithValue }) => {
+    try {
+      await tasksApi.createComment(taskId, content);
+      // Fetch updated task to get full data including comments
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create comment';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const updateComment = createAsyncThunk(
+  'boards/updateComment',
+  async ({ commentId, content }: { commentId: string; content: string }, { rejectWithValue }) => {
+    try {
+      const response = await tasksApi.updateComment(commentId, content);
+      // Fetch updated task to get full data including comments
+      const taskId = response.comment.taskId;
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update comment';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
+export const deleteComment = createAsyncThunk(
+  'boards/deleteComment',
+  async ({ commentId, taskId }: { commentId: string; taskId: string }, { rejectWithValue }) => {
+    try {
+      await tasksApi.deleteComment(commentId);
+      // Fetch updated task to get full data including comments
+      const updatedTask = await tasksApi.getTaskById(taskId);
+      return { task: updatedTask };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete comment';
+      return rejectWithValue(errorMessage);
+    }
+  }
+);
+
 // Create the slice
 const boardsSlice = createSlice({
   name: 'boards',
@@ -748,6 +795,123 @@ const boardsSlice = createSlice({
         }
       })
       .addCase(unassignUserFromTask.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Create comment
+      .addCase(createComment.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(createComment.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(createComment.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Update comment
+      .addCase(updateComment.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(updateComment.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(updateComment.rejected, (state, action) => {
+        state.error = action.payload as string;
+      })
+
+    // Delete comment
+      .addCase(deleteComment.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(deleteComment.fulfilled, (state, action) => {
+        const updatedTask = action.payload.task;
+
+        // Update in current board
+        if (state.currentBoard?.columns) {
+          state.currentBoard.columns.forEach(column => {
+            if (column.tasks) {
+              const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+              if (taskIndex !== -1) {
+                column.tasks[taskIndex] = updatedTask;
+              }
+            }
+          });
+        }
+
+        // Update in boards list
+        if (state.boards) {
+          state.boards.forEach(board => {
+            if (board.columns) {
+              board.columns.forEach(column => {
+                if (column.tasks) {
+                  const taskIndex = column.tasks.findIndex(t => t.id === updatedTask.id);
+                  if (taskIndex !== -1) {
+                    column.tasks[taskIndex] = updatedTask;
+                  }
+                }
+              });
+            }
+          });
+        }
+      })
+      .addCase(deleteComment.rejected, (state, action) => {
         state.error = action.payload as string;
       });
   },

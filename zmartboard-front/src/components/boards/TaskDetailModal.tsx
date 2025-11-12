@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import type { Task } from '../../types/boards.types';
-import { useUpdateTask, useTaskAssignments } from '../../store/boards/boardsHooks';
+import { useUpdateTask, useTaskAssignments, useComments } from '../../store/boards/boardsHooks';
+import { useUser } from '../../store/auth/authHooks';
 import { tasksApi } from '../../services/tasks.api';
 import SetDeadlineModal from './SetDeadlineModal';
 import SetEstimatedHoursModal from './SetEstimatedHoursModal';
 import AssignUsersModal from './AssignUsersModal';
+import AddCommentModal from './AddCommentModal';
 
 interface TaskDetailModalProps {
   isOpen: boolean;
@@ -24,9 +26,14 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [showEstimatedHoursModal, setShowEstimatedHoursModal] = useState(false);
   const [showAssignUsersModal, setShowAssignUsersModal] = useState(false);
+  const [showAddCommentModal, setShowAddCommentModal] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState('');
   const [task, setTask] = useState<Task | null>(initialTask);
   const { updateTask, isLoading: isUpdatingTask } = useUpdateTask();
   const { unassignUser, isLoading: isUnassigning } = useTaskAssignments();
+  const { addComment, editComment, removeComment, isLoading: isAddingComment } = useComments();
+  const currentUser = useUser();
 
   // Update task when initialTask prop changes or when modal opens
   useEffect(() => {
@@ -37,7 +44,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   // Refresh task data when assignments change (after modal closes)
   useEffect(() => {
-    if (isOpen && initialTask && !showAssignUsersModal) {
+    if (isOpen && initialTask && !showAssignUsersModal && !showAddCommentModal) {
       const refreshTask = async () => {
         try {
           const refreshedTask = await tasksApi.getTaskById(initialTask.id);
@@ -48,7 +55,7 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       };
       refreshTask();
     }
-  }, [isOpen, initialTask, showAssignUsersModal]);
+  }, [isOpen, initialTask, showAssignUsersModal, showAddCommentModal]);
 
   if (!isOpen || !task) return null;
 
@@ -155,6 +162,56 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
       } catch (error) {
         console.error('Error unassigning user:', error);
       }
+    }
+  };
+
+  const handleAddComment = async (taskId: string, content: string) => {
+    try {
+      await addComment(taskId, content);
+      setShowAddCommentModal(false);
+      // Refresh task data
+      const refreshedTask = await tasksApi.getTaskById(taskId);
+      setTask(refreshedTask);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!task) return;
+    if (window.confirm('¿Estás seguro de que quieres eliminar este comentario?')) {
+      try {
+        await removeComment(commentId, task.id);
+        // Refresh task data
+        const refreshedTask = await tasksApi.getTaskById(task.id);
+        setTask(refreshedTask);
+      } catch (error) {
+        console.error('Error deleting comment:', error);
+      }
+    }
+  };
+
+  const handleStartEditComment = (commentId: string, currentContent: string) => {
+    setEditingCommentId(commentId);
+    setEditCommentContent(currentContent);
+  };
+
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditCommentContent('');
+  };
+
+  const handleSaveEditComment = async (commentId: string) => {
+    if (!task || !editCommentContent.trim()) return;
+    try {
+      await editComment(commentId, editCommentContent.trim());
+      setEditingCommentId(null);
+      setEditCommentContent('');
+      // Refresh task data
+      const refreshedTask = await tasksApi.getTaskById(task.id);
+      setTask(refreshedTask);
+    } catch (error) {
+      console.error('Error updating comment:', error);
     }
   };
 
@@ -323,14 +380,99 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </h3>
               <div className="space-y-3">
                 {task.comments && task.comments.length > 0 ? (
-                  task.comments.map((comment) => (
-                    <div key={comment.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <p className="text-sm text-gray-800 leading-relaxed">{comment.content}</p>
-                      <p className="text-xs text-gray-500 mt-1.5">
-                        {formatDateTime(comment.createdAt)}
-                      </p>
-                    </div>
-                  ))
+                  task.comments.map((comment) => {
+                    const isOwner = currentUser?.id === comment.userId;
+                    const isEditing = editingCommentId === comment.id;
+                    const isEdited = new Date(comment.updatedAt).getTime() !== new Date(comment.createdAt).getTime();
+                    return (
+                      <div key={comment.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200 group hover:border-orange-200 transition-colors">
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-start space-x-2 flex-1 min-w-0">
+                            <div className="w-6 h-6 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {comment.user?.firstName?.charAt(0) || comment.user?.username?.charAt(0) || 'U'}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-gray-700">
+                                {comment.user?.firstName && comment.user?.lastName
+                                  ? `${comment.user.firstName} ${comment.user.lastName}`
+                                  : comment.user?.username || 'Usuario'}
+                              </p>
+                              <div className="flex items-center space-x-2">
+                                <p className="text-xs text-gray-500">
+                                  {formatDateTime(comment.createdAt)}
+                                </p>
+                                {isEdited && (
+                                  <span className="text-xs text-gray-400 italic">(editado)</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          {isOwner && !isEditing && (
+                            <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleStartEditComment(comment.id, comment.content)}
+                                className="p-1 text-gray-400 hover:text-orange-600 hover:bg-orange-50 rounded transition-colors flex-shrink-0"
+                                title="Editar comentario"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => handleDeleteComment(comment.id)}
+                                className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors flex-shrink-0"
+                                title="Eliminar comentario"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        {isEditing ? (
+                          <div className="space-y-2">
+                            <textarea
+                              value={editCommentContent}
+                              onChange={(e) => setEditCommentContent(e.target.value)}
+                              rows={4}
+                              maxLength={2000}
+                              className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors resize-none text-sm"
+                              autoFocus
+                              onKeyDown={(e) => {
+                                if (e.key === 'Escape') {
+                                  handleCancelEditComment();
+                                }
+                              }}
+                            />
+                            <p className="text-xs text-gray-500">
+                              {editCommentContent.length}/2000 caracteres
+                            </p>
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={handleCancelEditComment}
+                                className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                onClick={() => handleSaveEditComment(comment.id)}
+                                disabled={!editCommentContent.trim() || editCommentContent.trim() === comment.content}
+                                className="px-3 py-1.5 text-xs font-medium text-white bg-orange-600 hover:bg-orange-700 rounded transition-colors flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                <span>Guardar</span>
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-800 leading-relaxed">{comment.content}</p>
+                        )}
+                      </div>
+                    );
+                  })
                 ) : (
                   <p className="text-sm text-gray-400 text-center py-6 bg-gray-50 rounded-lg border border-gray-200">Sin comentarios</p>
                 )}
@@ -356,7 +498,10 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 </button>
 
                 {/* Add Comment Button */}
-                <button className="w-full px-3 py-2.5 bg-white border border-gray-200 hover:border-orange-300 hover:bg-orange-50 text-sm font-medium text-gray-700 hover:text-orange-600 rounded-lg transition-all flex items-center space-x-2 group">
+                <button 
+                  onClick={() => setShowAddCommentModal(true)}
+                  className="w-full px-3 py-2.5 bg-white border border-gray-200 hover:border-orange-300 hover:bg-orange-50 text-sm font-medium text-gray-700 hover:text-orange-600 rounded-lg transition-all flex items-center space-x-2 group"
+                >
                   <svg className="w-4 h-4 text-gray-400 group-hover:text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
@@ -588,6 +733,15 @@ const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           }
         }}
         task={task}
+      />
+
+      {/* Add Comment Modal */}
+      <AddCommentModal
+        isOpen={showAddCommentModal}
+        onClose={() => setShowAddCommentModal(false)}
+        onSubmit={handleAddComment}
+        task={task}
+        isLoading={isAddingComment}
       />
     </div>
   );

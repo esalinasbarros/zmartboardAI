@@ -15,6 +15,9 @@ import {
   moveTask,
   assignUserToTask,
   unassignUserFromTask,
+  createComment,
+  updateComment,
+  deleteComment,
   clearError,
   setCurrentBoard,
   clearBoards,
@@ -331,6 +334,35 @@ export const useTaskAssignments = () => {
   return {
     assignUser,
     unassignUser,
+    isLoading,
+    error,
+  };
+};
+
+// Hook for comments
+export const useComments = () => {
+  const dispatch = useAppDispatch();
+  const { isLoading, error } = useBoardsState();
+
+  const addComment = (taskId: string, content: string) => {
+    dispatch(clearError());
+    return dispatch(createComment({ taskId, content }));
+  };
+
+  const editComment = (commentId: string, content: string) => {
+    dispatch(clearError());
+    return dispatch(updateComment({ commentId, content }));
+  };
+
+  const removeComment = (commentId: string, taskId: string) => {
+    dispatch(clearError());
+    return dispatch(deleteComment({ commentId, taskId }));
+  };
+
+  return {
+    addComment,
+    editComment,
+    removeComment,
     isLoading,
     error,
   };

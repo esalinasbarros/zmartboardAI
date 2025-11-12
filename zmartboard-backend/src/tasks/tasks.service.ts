@@ -13,6 +13,8 @@ import {
   UnassignUserDto,
   CreateTimeEntryDto,
   UpdateTimeEntryDto,
+  CreateCommentDto,
+  UpdateCommentDto,
 } from './dto';
 import { ProjectRole } from '@prisma/client';
 
@@ -62,6 +64,16 @@ export class TasksService {
         },
         comments: {
           orderBy: { createdAt: 'asc' },
+          include: {
+            user: {
+              select: {
+                id: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+          },
         },
         assignedUsers: {
           include: {
@@ -805,5 +817,140 @@ export class TasksService {
       totalHours,
       entryCount: timeEntries.length,
     };
+  }
+
+  /**
+   * Create comment for task
+   */
+  async createComment(taskId: string, createCommentDto: CreateCommentDto, userId: string) {
+    const task = await this.prisma.task.findUnique({
+      where: { id: taskId },
+      include: {
+        column: {
+          include: {
+            board: {
+              include: { project: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new NotFoundException('Task not found');
+    }
+
+    await this.checkProjectMemberPermission(task.column.board.projectId, userId);
+
+    const comment = await this.prisma.comment.create({
+      data: {
+        content: createCommentDto.content,
+        userId,
+        taskId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    return { message: 'Comment created successfully', comment };
+  }
+
+  /**
+   * Update comment
+   */
+  async updateComment(commentId: string, updateCommentDto: UpdateCommentDto, userId: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+      include: {
+        task: {
+          include: {
+            column: {
+              include: {
+                board: {
+                  include: { project: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    await this.checkProjectMemberPermission(comment.task.column.board.projectId, userId);
+
+    // Only the user who created the comment can update it
+    if (comment.userId !== userId) {
+      throw new ForbiddenException('You can only update your own comments');
+    }
+
+    const updatedComment = await this.prisma.comment.update({
+      where: { id: commentId },
+      data: {
+        content: updateCommentDto.content,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    return { message: 'Comment updated successfully', comment: updatedComment };
+  }
+
+  /**
+   * Delete comment
+   */
+  async deleteComment(commentId: string, userId: string) {
+    const comment = await this.prisma.comment.findUnique({
+      where: { id: commentId },
+      include: {
+        task: {
+          include: {
+            column: {
+              include: {
+                board: {
+                  include: { project: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!comment) {
+      throw new NotFoundException('Comment not found');
+    }
+
+    await this.checkProjectMemberPermission(comment.task.column.board.projectId, userId);
+
+    // Only the user who created the comment can delete it
+    if (comment.userId !== userId) {
+      throw new ForbiddenException('You can only delete your own comments');
+    }
+
+    await this.prisma.comment.delete({
+      where: { id: commentId },
+    });
+
+    return { message: 'Comment deleted successfully' };
   }
 }
